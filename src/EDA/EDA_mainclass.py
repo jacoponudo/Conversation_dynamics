@@ -7,6 +7,7 @@ This script from the outpu of PRO do a little bit of EDA to undestand better how
 
 import sys
 import os
+import numpy as np
 module_path = '/Users/jacoponudo/Documents/thesis/src/EDA'
 sys.path.append(module_path)
 from EDA_package import *
@@ -23,6 +24,7 @@ if not os.path.exists(output_dir):
 social_media_name = "voat"
 root = '/Users/jacoponudo/Documents/thesis/'
 data = pd.read_csv(root + 'src/PRO/output/' + social_media_name + '_processed.csv')
+
 
 # 2.1 - Participation Distribution by Decile
 data['is_toxic']=data['toxicity_score']>0.6
@@ -141,13 +143,13 @@ plt.close()
 
 # 2.7 - User Activity distribution 
 data.columns
-median_comments = data.groupby('user')['comments_user_in_thread'].median().reset_index()
+median_comments = data.groupby('user')['number_of_comments_by_user_in_thread'].median().reset_index()
 
-median_comments.comments_user_in_thread.min()
+median_comments.number_of_comments_by_user_in_thread.min()
 
 
 plt.figure(figsize=(10, 6))
-plt.hist(median_comments['comments_user_in_thread'], bins=10, color='skyblue', edgecolor='black')
+plt.hist(median_comments['number_of_comments_by_user_in_thread'], bins=10, color='skyblue', edgecolor='black')
 plt.xlabel('Median Comments per User in Thread')
 plt.ylabel('Frequency')
 plt.title('Distribution of Median Comments per User in Thread')
