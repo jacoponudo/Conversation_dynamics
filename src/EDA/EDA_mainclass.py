@@ -138,3 +138,18 @@ plt.title('Toxicity Distribution per User')
 plt.ylabel('% of Toxic comments')
 plt.savefig(f'{output_dir}/toxicity_distribution_per_user.png')
 plt.close()
+
+# 2.7 - User Activity distribution 
+data.columns
+median_comments = data.groupby('user')['comments_user_in_thread'].median().reset_index()
+
+median_comments.comments_user_in_thread.min()
+
+
+plt.figure(figsize=(10, 6))
+plt.hist(median_comments['comments_user_in_thread'], bins=10, color='skyblue', edgecolor='black')
+plt.xlabel('Median Comments per User in Thread')
+plt.ylabel('Frequency')
+plt.title('Distribution of Median Comments per User in Thread')
+plt.grid(axis='y', alpha=0.75)
+plt.show()

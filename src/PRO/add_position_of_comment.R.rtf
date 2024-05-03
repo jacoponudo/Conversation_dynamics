@@ -1,0 +1,60 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2761
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 rm(list = ls())\
+gc()\
+\
+library(data.table)\
+library(ggplot2)\
+library(dplyr)\
+library(arrow)\
+library(stringr)\
+library(scales)\
+library(lubridate)\
+source("src/utils/binning_functions.R")\
+source("src/utils/participation_and_regression_functions.R")\
+source("src/utils/compute_CI.R")\
+source("src/utils/unify_dataset_columns.R")\
+\
+# Choose the social\
+all_data <- setDT(NULL)\
+social_to_work_with <- c("voat")\
+social_unique_names <- social_to_work_with\
+n_bin <- 21\
+output_folder <- "data/Results/figure_1/"\
+\
+for (social in social_to_work_with) \{\
+  setwd("/app/data/Labeled/Voat")\
+  data <- read_parquet("voat_labeled_data_unified.parquet")\
+  \
+  message("Read: ", social)\
+  \
+  # Unify column names\
+  df <- unify_dataset_columns(df, social)\
+  df <- df[!is.na(date)]\
+  \
+  # Order the comments by date,time and topic\
+  # Then apply linear binning\
+  \
+  df <-\
+    df[, .(topic,\
+           root_submission,\
+           date,\
+           comment_id,\
+           user,\
+           toxicity_score)]\
+  df <- df[order(topic, root_submission, date, ), ]\
+  \
+  df[, lin_bin := sapply(.SD, linear_bin, n_bin),\
+     by = .(root_submission, topic), .SDcols = "comment_id"]\
+  \
+\}\
+\
+\
+message("Done")\
+\
+}

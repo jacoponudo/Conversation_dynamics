@@ -1,0 +1,1 @@
+Obtained using PRO_mainclass.py, this file PRO/output/voat_with_percentile.csv contains all the comments,from threads with more than 10 comments, and for each one there is the percentile column which indicates the position of the comment in the thread. 
