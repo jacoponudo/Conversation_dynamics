@@ -14,6 +14,8 @@ from EDA_package import *
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+import matplotlib.pyplot as plt
+import math
 
 # Create output directory if it doesn't exist
 output_dir = '/Users/jacoponudo/Documents/thesis/src/EDA/output'
@@ -142,16 +144,39 @@ plt.savefig(f'{output_dir}/toxicity_distribution_per_user.png')
 plt.close()
 
 # 2.7 - User Activity distribution 
-data.columns
-median_comments = data.groupby('user')['number_of_comments_by_user_in_thread'].median().reset_index()
 
-median_comments.number_of_comments_by_user_in_thread.min()
-
-
-plt.figure(figsize=(10, 6))
-plt.hist(median_comments['number_of_comments_by_user_in_thread'], bins=10, color='skyblue', edgecolor='black')
-plt.xlabel('Median Comments per User in Thread')
+max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].quantile(0.9)
+np.mean(max_comments_per_user<=1)
+plt.hist(max_comments_per_user, bins=100, edgecolor='black')
+plt.xlabel('90th pe Number of Comments by User in Thread')
 plt.ylabel('Frequency')
-plt.title('Distribution of Median Comments per User in Thread')
-plt.grid(axis='y', alpha=0.75)
+plt.title('Distribution of 90th Percentile Comments per User in Threads')
+plt.axvline(x=2, color='r', linestyle='--')  # Aggiunge una linea per indicare il punto 2 sul grafico
+plt.text(30, 3000, '69% of users ', rotation=0, fontsize=12, color='r')
 plt.show()
+
+# create the two groups of users: deep and flash 
+max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].quantile(0.9)
+mean_less_than_or_equal_to_1 = np.mean(max_comments_per_user <= 1)
+deep_users = max_comments_per_user[max_comments_per_user > 1].index.tolist()
+flash_users = max_comments_per_user[max_comments_per_user <= 1].index.tolist()
+print("Deep Users:", deep_users)
+print("Flash Users:", flash_users)
+print("Percentage of users with max comments per thread <= 1:", mean_less_than_or_equal_to_1)
+
+# Extract the two dataset for user deep and flash users
+deep_users_data = data[data['user'].isin(deep_users)]
+flash_users_data = data[data['user'].isin(flash_users)]
+
+# Gli utenti deep e quelli flash, mangiano gli stessi thread? #Hanno stili di scrittura diversi? #hanno lifetime diversi?
+deep_users_number_of_thread_per_user = deep_users_data['root_submission'].unique()
+flash_users_number_of_thread_per_user= flash_users_data['root_submission'].unique()
+flash_users_threads = set(flash_users_number_of_thread_per_user)
+deep_users_threads = set(deep_users_number_of_thread_per_user)
+len(flash_users_threads.intersection(deep_users_threads))/len(deep_users_threads)
+# Partizionando in maniera causuale gli utenti quale sarebbe lo share di dieta che condibvidono i due gruppi 
+#il vaore 20% che otteniamo ora è 
+
+
+
+
