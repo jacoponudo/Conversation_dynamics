@@ -156,10 +156,10 @@ plt.text(30, 3000, '69% of users ', rotation=0, fontsize=12, color='r')
 plt.show()
 
 # create the two groups of users: deep and flash 
-max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].quantile(0.9)
+max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].max()
 mean_less_than_or_equal_to_1 = np.mean(max_comments_per_user <= 1)
 deep_users = max_comments_per_user[max_comments_per_user > 1].index.tolist()
-flash_users = max_comments_per_user[max_comments_per_user <= 1].index.tolist()
+flash_users = max_comments_per_user[max_comments_per_user <=1].index.tolist()
 print("Deep Users:", deep_users)
 print("Flash Users:", flash_users)
 print("Percentage of users with max comments per thread <= 1:", mean_less_than_or_equal_to_1)
@@ -176,6 +176,91 @@ deep_users_threads = set(deep_users_number_of_thread_per_user)
 len(flash_users_threads.intersection(deep_users_threads))/len(deep_users_threads)
 # Partizionando in maniera causuale gli utenti quale sarebbe lo share di dieta che condibvidono i due gruppi 
 #il vaore 20% che otteniamo ora è 
+
+
+# Quanti commenti sono fanno parte di deep chat e quanti fanno parte di flash interactions
+np.mean(data['sequential_number_of_comment_by_user_in_thread']==1)
+data[data['sequential_number_of_comment_by_user_in_thread']>1]['user'].unique)()
+max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].max()
+np.mean(max_comments_per_user <= 1)
+max_comments_per_user = data.groupby('root_submission')['sequential_number_of_comment_by_user_in_thread'].mean()
+
+
+#3.0
+
+df=data
+
+G = nx.Graph()
+
+# Aggiunta dei nodi
+G.add_nodes_from(df['user'].unique())
+from tqdm import tqdm
+# Iterazione sul dataframe per aggiungere gli archi
+for submission in tqdm(df['root_submission'].unique()):
+    users_with_submission = df[df['root_submission'] == submission]['user'].tolist()
+    if len(users_with_submission) > 1:
+        # Se ci sono più di un utente con la stessa root_submission, aggiungi un arco tra di loro
+        for i in range(len(users_with_submission)):
+            for j in range(i+1, len(users_with_submission)):
+                user1 = users_with_submission[i]
+                user2 = users_with_submission[j]
+                if user1 != user2:  # Evita i self loop
+                    G.add_edge(user1, user2, weight=1)  # Aggiungi l'arco con peso 1
+
+
+# fai pruning 
+grado_minimo = 6
+G_pruned = prune_graph(G, grado_minimo)
+###
+
+blue_subgraph = G.subgraph(deep_users)
+red_subgraph = G.subgraph(flash_users)
+
+# Calcolo dei gradi dei nodi
+blue_degrees = [degree for node, degree in blue_subgraph.degree()]
+red_degrees = [degree for node, degree in red_subgraph.degree()]
+
+# Plot dei boxplot delle distribuzioni dei gradi
+plt.figure(figsize=(10, 5))
+
+plt.subplot(1, 2, 1)
+sns.boxplot(data=blue_degrees, color='blue')
+plt.title('Distribuzione dei gradi dei nodi blu')
+plt.xlabel('Grado')
+plt.ylabel('Numero di nodi')
+
+plt.subplot(1, 2, 2)
+sns.boxplot(data=red_degrees, color='red')
+plt.title('Distribuzione dei gradi dei nodi rossi')
+plt.xlabel('Grado')
+plt.ylabel('Numero di nodi')
+
+plt.tight_layout()
+plt.show()
+
+
+
+
+import networkx as nx
+import community  # Assicurati di aver installato il pacchetto python-louvain per utilizzare questo modulo
+
+# Supponiamo che tu abbia già creato il tuo grafo G
+
+# Trova la partizione dei nodi utilizzando l'algoritmo di Louvain
+partition = community.best_partition(G)
+
+# Identifica due comunità
+community_1 = []
+community_2 = []
+for node, comm in partition.items():
+    if comm == 0:
+        community_1.append(node)
+    elif comm == 1:
+        community_2.append(node)
+
+# Stampa i nodi nelle due comunità
+print("Comunità 1:", community_1)
+print("Comunità 2:", community_2)
 
 
 
