@@ -10,12 +10,14 @@ import os
 import numpy as np
 module_path = '/Users/jacoponudo/Documents/thesis/src/EDA'
 sys.path.append(module_path)
-from EDA_package import *
+from EDA_package.function import *
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import math
+from tqdm import tqdm 
+from scipy.stats import chi2_contingency
 
 # Create output directory if it doesn't exist
 output_dir = '/Users/jacoponudo/Documents/thesis/src/EDA/output'
@@ -143,124 +145,101 @@ plt.ylabel('% of Toxic comments')
 plt.savefig(f'{output_dir}/toxicity_distribution_per_user.png')
 plt.close()
 
-# 2.7 - User Activity distribution 
 
-max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].quantile(0.9)
+# 2.7 - Deep vs Flash conversaion comparison
+df=data[data['root_submission'].isin(ids_flash_conversations) | data['root_submission'].isin(ids_deep_chat)]
+
+import matplotlib.pyplot as plt
+
+x = df.groupby('root_submission')['thread_lifetime_h'].max()
+y = df.groupby('root_submission')['user'].nunique()
+z = df.groupby('root_submission')['number_of_comments'].max()
+
+colors = [
+          'red' if root_submission in ids_flash_conversations else
+          'blue' if root_submission in ids_deep_chat else
+          'gray' for root_submission in x.index]
+plt.figure(figsize=(10, 8))
+plt.scatter(x, y, s=z*1, c=colors, alpha=0.1)
+
+# Personalizza il plot
+plt.xlabel('Durata massima del thread (ore)')
+plt.ylabel('Numero unico di utenti')
+plt.title('Scatter plot dei thread')
+plt.colorbar(label='Numero massimo di commenti')
+plt.grid(True)
+plt.xlim(0,1000)
+
+plt.legend(handles=[plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='purple', markersize=10, label='Appartiene a entrambe le categorie'),
+                    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='red', markersize=10, label='Flash Conversations'),
+                    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='blue', markersize=10, label='Deep Chat'),
+                    plt.Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', markersize=10, label='Non appartiene a nessuna categoria')])
+
+plt.show()
+
+# 2.8 - User Activity distribution 
+
+max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].mean()
 np.mean(max_comments_per_user<=1)
-plt.hist(max_comments_per_user, bins=100, edgecolor='black')
+plt.hist(max_comments_per_user, bins=300, edgecolor='black')
 plt.xlabel('90th pe Number of Comments by User in Thread')
 plt.ylabel('Frequency')
 plt.title('Distribution of 90th Percentile Comments per User in Threads')
 plt.axvline(x=2, color='r', linestyle='--')  # Aggiunge una linea per indicare il punto 2 sul grafico
 plt.text(30, 3000, '69% of users ', rotation=0, fontsize=12, color='r')
+plt.xlim(0,40)
 plt.show()
 
-# create the two groups of users: deep and flash 
-max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].max()
-mean_less_than_or_equal_to_1 = np.mean(max_comments_per_user <= 1)
-deep_users = max_comments_per_user[max_comments_per_user > 1].index.tolist()
-flash_users = max_comments_per_user[max_comments_per_user <=1].index.tolist()
-print("Deep Users:", deep_users)
-print("Flash Users:", flash_users)
-print("Percentage of users with max comments per thread <= 1:", mean_less_than_or_equal_to_1)
+# 2.9 - Definition Deep and Flash, Users and Threads
+max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].mean()
+deep_users = max_comments_per_user[max_comments_per_user > 1.5].index.tolist()
+flash_users = max_comments_per_user[max_comments_per_user <=1.5].index.tolist()
+data['user_type'] = data['user'].isin(flash_users).apply(lambda x: 'flash' if x else 'deep')
 
-# Extract the two dataset for user deep and flash users
-deep_users_data = data[data['user'].isin(deep_users)]
-flash_users_data = data[data['user'].isin(flash_users)]
-
-# Gli utenti deep e quelli flash, mangiano gli stessi thread? #Hanno stili di scrittura diversi? #hanno lifetime diversi?
-deep_users_number_of_thread_per_user = deep_users_data['root_submission'].unique()
-flash_users_number_of_thread_per_user= flash_users_data['root_submission'].unique()
-flash_users_threads = set(flash_users_number_of_thread_per_user)
-deep_users_threads = set(deep_users_number_of_thread_per_user)
-len(flash_users_threads.intersection(deep_users_threads))/len(deep_users_threads)
-# Partizionando in maniera causuale gli utenti quale sarebbe lo share di dieta che condibvidono i due gruppi 
-#il vaore 20% che otteniamo ora è 
+grouped = data.groupby('root_submission')['first_comment'].mean().reset_index()
+ids_deep_chat = grouped[grouped.first_comment < 0.4]['root_submission'].unique()
+ids_flash_conversations = grouped[grouped.first_comment > 0.8]['root_submission'].unique()
 
 
-# Quanti commenti sono fanno parte di deep chat e quanti fanno parte di flash interactions
-np.mean(data['sequential_number_of_comment_by_user_in_thread']==1)
-data[data['sequential_number_of_comment_by_user_in_thread']>1]['user'].unique)()
-max_comments_per_user = data.groupby('user')['number_of_comments_by_user_in_thread'].max()
-np.mean(max_comments_per_user <= 1)
-max_comments_per_user = data.groupby('root_submission')['sequential_number_of_comment_by_user_in_thread'].mean()
+data['thread_type']=data['root_submission'].isin(ids_flash_conversations).apply(lambda x: 'flash' if x else 'deep')
+data['thread_type_bool']=data['thread_type']=='deep'
 
+#3.0 - User diet vs User type
+df = data.groupby(['user', 'root_submission', 'user_type', 'thread_type'])['comment_id'].count().reset_index()
+df.columns
+thread_type = df['user_type']=='deep'
+user_type =df['thread_type']=='deep'
+table = np.array([
+    [sum(np.logical_and(thread_type, user_type)), sum(np.logical_and(thread_type, np.logical_not(user_type)))],
+    [sum(np.logical_and(np.logical_not(thread_type), user_type)), sum(np.logical_and(np.logical_not(thread_type), np.logical_not(user_type)))]
+])
 
-#3.0
+chi2, p, dof, expected = chi2_contingency(table)
 
-df=data
+print("Chi-square statistic:", chi2)
+print("p-value:", p)
+print("Degrees of freedom:", dof)
+print("Contingency table:")
+print(table)
+print("Expected frequencies table:")
+print(expected)
 
-G = nx.Graph()
-
-# Aggiunta dei nodi
-G.add_nodes_from(df['user'].unique())
-from tqdm import tqdm
-# Iterazione sul dataframe per aggiungere gli archi
-for submission in tqdm(df['root_submission'].unique()):
-    users_with_submission = df[df['root_submission'] == submission]['user'].tolist()
-    if len(users_with_submission) > 1:
-        # Se ci sono più di un utente con la stessa root_submission, aggiungi un arco tra di loro
-        for i in range(len(users_with_submission)):
-            for j in range(i+1, len(users_with_submission)):
-                user1 = users_with_submission[i]
-                user2 = users_with_submission[j]
-                if user1 != user2:  # Evita i self loop
-                    G.add_edge(user1, user2, weight=1)  # Aggiungi l'arco con peso 1
-
-
-# fai pruning 
-grado_minimo = 6
-G_pruned = prune_graph(G, grado_minimo)
-###
-
-blue_subgraph = G.subgraph(deep_users)
-red_subgraph = G.subgraph(flash_users)
-
-# Calcolo dei gradi dei nodi
-blue_degrees = [degree for node, degree in blue_subgraph.degree()]
-red_degrees = [degree for node, degree in red_subgraph.degree()]
-
-# Plot dei boxplot delle distribuzioni dei gradi
-plt.figure(figsize=(10, 5))
-
-plt.subplot(1, 2, 1)
-sns.boxplot(data=blue_degrees, color='blue')
-plt.title('Distribuzione dei gradi dei nodi blu')
-plt.xlabel('Grado')
-plt.ylabel('Numero di nodi')
-
-plt.subplot(1, 2, 2)
-sns.boxplot(data=red_degrees, color='red')
-plt.title('Distribuzione dei gradi dei nodi rossi')
-plt.xlabel('Grado')
-plt.ylabel('Numero di nodi')
-
-plt.tight_layout()
+row_sums = table.sum(axis=1)
+relative_table = table / row_sums[:, np.newaxis]
+plt.figure(figsize=(8, 6))
+sns.heatmap(relative_table, annot=True, cmap='Blues', fmt='.2f')
+plt.title('Contingency table User and Thread')
+plt.xlabel('Deep User')
+plt.ylabel('Deep Thread')
 plt.show()
 
 
 
 
-import networkx as nx
-import community  # Assicurati di aver installato il pacchetto python-louvain per utilizzare questo modulo
 
-# Supponiamo che tu abbia già creato il tuo grafo G
 
-# Trova la partizione dei nodi utilizzando l'algoritmo di Louvain
-partition = community.best_partition(G)
 
-# Identifica due comunità
-community_1 = []
-community_2 = []
-for node, comm in partition.items():
-    if comm == 0:
-        community_1.append(node)
-    elif comm == 1:
-        community_2.append(node)
 
-# Stampa i nodi nelle due comunità
-print("Comunità 1:", community_1)
-print("Comunità 2:", community_2)
 
 
 
