@@ -21,7 +21,7 @@ def individual_exp_log_likelihood(event_times, T, parameters):
         event_times (array-like): Time of events.
         T (float): Total observation time.
         parameters (tuple): Tuple of parameters (λ, α, β).
-
+ 
     Returns:
         float: Log-likelihood of the given event sequence.
     """

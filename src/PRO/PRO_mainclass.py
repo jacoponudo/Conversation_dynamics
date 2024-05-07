@@ -68,9 +68,9 @@ for name, group in threads:
     
 progress_bar.close()
 
+data['language'] = data['text'].apply(detect_language)
+
+unique_word_ratios,total_words = calculate_unique_word_ratio(data)
+data['unique_word_user'] = data['user'].map(unique_word_ratios)
 
 data.to_csv(root+'src/PRO/output/'+social_media_name+'_processed.csv')
-
-
-
-

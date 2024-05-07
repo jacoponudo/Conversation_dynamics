@@ -1,3 +1,4 @@
 /build/
 *.csv
+PRO/output/
 config.ini

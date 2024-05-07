@@ -17,7 +17,7 @@ import random
 from scipy.stats import chi2
 
 # Set source
-source_data='/Users/jacoponudo/Downloads/voat_labeled_data_unified.parquet'
+source_data='/Users/jacoponudo/Documents/thesis/data/voat/voat_labeled_data_unified.parquet'
 root='/Users/jacoponudo/Documents/thesis/'
 output=root+'src/HWK/output'
 output_threads=root+'src/HWK/output/temporary'
@@ -48,7 +48,7 @@ if STEP_1:
         end_index = len(users)
     
     # Select users for the specified thread
-    selected_users = users[start_index:end_index]
+    selected_users = users[1:5]
     user_analysis=analyze_users(dataset, selected_users, 2)
     user_analysis=pd.DataFrame(user_analysis)
     user_analysis.to_csv(output_threads+'/user_analysis_'+str(thread)+'_'+str(n_threads)+'.csv')

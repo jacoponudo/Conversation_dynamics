@@ -1,33 +1,10 @@
-import sys
-module_path = '/Users/jacoponudo/Documents/thesis/src/PRO'
-sys.path.append(module_path)
-import langid
-import pandas as pd
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue May  7 16:37:48 2024
 
-def add_percentile_column(group):
-    group['percentile'] = (group['created_at'].rank(pct=True) * 100).round(2)
-    return group
-
-from tqdm import tqdm
-
-def count_unique_words(text):
-    if isinstance(text, str):
-        words = text.split()
-        return len(set(words))
-    else:
-        return 0
-
-
-from langdetect import detect
-
-def detect_language(text):
-    try:
-        language = detect(text)
-        return language
-    except:
-        # Handle the case where language detection fails
-        return 'en'
-
+@author: jacoponudo
+"""
 
 import nltk
 from nltk.corpus import stopwords
@@ -100,3 +77,13 @@ def calculate_unique_word_ratio(data):
     
     return unique_words_users,total_words_users
 
+
+
+import langid
+
+def detect_language(text):
+    lang, confidence = langid.classify(text)
+    if confidence > -20:  # Adjust the confidence threshold as needed
+        return lang
+    else:
+        return None
