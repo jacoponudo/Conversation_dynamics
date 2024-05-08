@@ -87,6 +87,7 @@ correlation_matrix = merged_data[['median_length_comment', 'unique_word_user',
 plt.figure(figsize=(10, 8))
 sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
 plt.title('Correlation Matrix')
+plt.savefig(os.path.join(output_dir, 'corrlation_matrix_3_0.png'))
 plt.show()
 
 
@@ -103,6 +104,7 @@ plt.title('Scatter Plot: Unique Word Count vs Median Toxicity Score')
 plt.ylabel('Unique Word Count per User')
 plt.xlabel('Median Toxicity Score')
 plt.grid(True)
+plt.savefig(os.path.join(output_dir, 'scatter_toxicity_vs_vocabolary_3_1.png'))
 plt.show()
 
 #3.2 - Concentration of the commenting activity and of the dialogues
@@ -127,20 +129,7 @@ for topic in tqdm(data['topic'].unique()):
 
 results_df = pd.DataFrame(results)
 
-results_df.set_index('topic', inplace=True)
-
-
-
-
-
-
-
-
-
-
-
-# Importing necessary libraries
-
+#3.2.1
 # Extracting data for plotting
 topics = results_df['topic'].unique()
 pre_covid_depth_gini = results_df[results_df['period'] == 'pre-COVID']['depth_gini']
@@ -172,9 +161,10 @@ plt.title('Gini Coefficients for Depth (Post 2nd)')
 plt.ylabel('Gini Coefficient')
 plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
+plt.savefig(os.path.join(output_dir, 'gini_index_depth_3_2_1.png'))
 plt.show()
 
-
+#3.2.2
 #seconda parte 
 # Extracting data for plotting
 topics = results_df['topic'].unique()
@@ -207,42 +197,37 @@ plt.title('Gini Coefficients for Comment Count')
 plt.ylabel('Gini Coefficient')
 plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
+plt.savefig(os.path.join(output_dir, 'gini_index_comments_3_2_2.png'))
 plt.show()
 
 #3.3 - Distance prevoous comment and Toxicity
 
-# Filtra il DataFrame per includere solo le righe con almeno 30 commenti
+#3.3.1
 df = data[data['number_of_comments'] > 30]
 df = df.dropna(subset=['temporal_distance_from_previous_comment_h', 'toxicity_score'])
 
-# Creazione dello scatterplot con alpha
+
 sns.scatterplot(data=df, x='temporal_distance_from_previous_comment_h', y='toxicity_score', alpha=0.1)
 plt.xlabel('Temporal Distance from Previous Comment (hours)')
 plt.ylabel('Toxicity Score')
 plt.title('Scatterplot of Temporal Distance vs Toxicity Score')
 
-# Adattamento del modello di regressione lineare
 X = df[['temporal_distance_from_previous_comment_h']]
 y = df['toxicity_score']
 model = LinearRegression()
 model.fit(X, y)
 
-# Tracciamento della linea di regressione
 plt.plot(X, model.predict(X), color='red')
-
+plt.savefig(os.path.join(output_dir, 'intercomment_arrival_time_vs_toxicitycpng'))
 plt.show()
 
-
-
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-# Creazione dei boxplot
+#3.3.2
+df['is_toxic']=df['toxicity_score']>0.6
 sns.boxplot(data=df,y='temporal_distance_from_previous_comment_h', x='is_toxic', showfliers=False)
-plt.xlabel('Temporal Distance from Previous Comment (hours)')
-plt.ylabel('Toxicity (is_toxic)')
+plt.ylabel('Temporal Distance from Previous Comment (hours)')
+plt.xlabel('Toxicity (is_toxic)')
 plt.title('Boxplot of Toxicity vs Temporal Distance')
-
+plt.savefig(os.path.join(output_dir, 'intercomment_arrival_time_vs_toxicity_boxplot_3_3_2.png'))
 plt.show()
 
 
