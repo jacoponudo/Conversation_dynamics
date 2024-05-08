@@ -73,4 +73,8 @@ data['language'] = data['text'].apply(detect_language)
 unique_word_ratios,total_words = calculate_unique_word_ratio(data)
 data['unique_word_user'] = data['user'].map(unique_word_ratios)
 
+data = data.sort_values(by=['user', 'created_at'])
+data['created_at'] = pd.to_datetime(data['created_at'])
+data['temporal_distance_from_previous_comment_h'] = data.groupby('user')['created_at'].diff().dt.total_seconds() / 3600
+
 data.to_csv(root+'src/PRO/output/'+social_media_name+'_processed.csv')

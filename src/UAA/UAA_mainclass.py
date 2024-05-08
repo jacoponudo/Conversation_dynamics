@@ -9,6 +9,11 @@ module_path = '/Users/jacoponudo/Documents/thesis/src/UAA'
 sys.path.append(module_path)
 from UAA_package.NLP_tools import *
 from UAA_package.functions import *
+import matplotlib as plt
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from tqdm import tqdm
 
 # Create output directory if it doesn't exist
 output_dir = '/Users/jacoponudo/Documents/thesis/src/UAA/output'
@@ -20,7 +25,8 @@ social_media_name = "voat"
 root = '/Users/jacoponudo/Documents/thesis/'
 data = pd.read_csv(root + 'src/PRO/output/' + social_media_name + '_processed.csv')
 
-# Estract informations from columns
+
+#3.0 - Estract informations from columns
 #* La lunghezza mediana dei testi( numero di parole )
 word_count_per_post = data.groupby('user')['text'].apply(lambda x: x.fillna('').apply(lambda text: len(str(text).split()))).reset_index()
 lunghezza=word_count_per_post.groupby('user')['text'].median().reset_index()
@@ -30,7 +36,7 @@ lunghezza.columns=['user', 'median_length_comment']
 word_count_per_user=data.groupby('user')['unique_word_user'].max().reset_index()
 
 #* La media della tossicità dei commenti 
-tox_median_per_user=data.groupby('user')['toxicity_score'].median().reset_index()
+tox_median_per_user=data.groupby('user')['toxicity_score'].max().reset_index()
 tox_median_per_user.columns=['user', 'median_toxicity_score']
 
 #* Il lifetime dell'utente nei dati
@@ -81,7 +87,7 @@ plt.show()
 
 
 
-
+#3.1 - Vocabolary size and Toxicity
 df=merged_data[merged_data['number_of_comments']>30]
 colors = df['median_toxicity_score']
 labels = df['user']
@@ -92,11 +98,113 @@ plt.title('Scatter Plot: Unique Word Count vs Median Toxicity Score')
 plt.ylabel('Unique Word Count per User')
 plt.xlabel('Median Toxicity Score')
 plt.grid(True)
+plt.show()
+
+#3.2 - Concentration of the commenting activity and of the dialogues
+data['created_at'] = pd.to_datetime(data['created_at'])
+data['period'] = pd.cut(data['created_at'], bins=[pd.Timestamp('2015-01-01'), pd.Timestamp('2020-03-01'), pd.Timestamp('2020-05-01'), pd.Timestamp('2024-01-01')], labels=['pre-COVID', 'COVID', 'post-COVID'])
+data['depth']=(data['sequential_number_of_comment_by_user_in_thread']!=1)
+results = []
+
+for topic in tqdm(data['topic'].unique()):
+    for period in data['period'].unique():
+        df = data[(data['topic'] == topic) & (data['period'] == period)]
+        
+        depth_grouped_data = df.groupby('user')['depth'].sum()
+        depth_values = depth_grouped_data.values
+        depth_gini_coef = gini_coefficient(depth_values)
+
+        comment_count_grouped_data = df.groupby('user')['comment_id'].count()
+        comment_count_values = comment_count_grouped_data.values
+        comment_count_gini_coef = gini_coefficient(comment_count_values)
+
+        results.append({'topic': topic, 'period':period, 'depth_gini': depth_gini_coef, 'comment_count_gini': comment_count_gini_coef})
+
+results_df = pd.DataFrame(results)
+
+results_df.set_index('topic', inplace=True)
 
 
+
+
+
+
+
+
+
+
+
+# Importing necessary libraries
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Extracting data for plotting
+topics = results_df['topic'].unique()
+pre_covid_depth_gini = results_df[results_df['period'] == 'pre-COVID']['depth_gini']
+covid_depth_gini = results_df[results_df['period'] == 'COVID']['depth_gini']
+post_covid_depth_gini = results_df[results_df['period'] == 'post-COVID']['depth_gini']
+
+# Setting the width of the bars
+bar_width = 0.25
+
+# Setting the position of the bars on the x-axis
+r1 = np.arange(len(topics))
+r2 = [x + bar_width for x in r1]
+r3 = [x + bar_width for x in r2]
+
+# Creating the bar plot for depth_gini
+plt.bar(r1, pre_covid_depth_gini, color='skyblue', width=bar_width, edgecolor='grey', label='Pre-COVID')
+plt.bar(r2, covid_depth_gini, color='salmon', width=bar_width, edgecolor='grey', label='COVID')
+plt.bar(r3, post_covid_depth_gini, color='lightgreen', width=bar_width, edgecolor='grey', label='Post-COVID')
+
+# Adding xticks on the middle of the group bars
+plt.xlabel('Topic', fontweight='bold')
+plt.xticks([r + bar_width for r in range(len(topics))], topics)
+
+# Adding a legend
+plt.legend()
+
+# Showing the plot
+plt.title('Gini Coefficients for Depth (Post 2nd)')
+plt.ylabel('Gini Coefficient')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
 plt.show()
 
 
+#seconda parte 
+# Extracting data for plotting
+topics = results_df['topic'].unique()
+pre_covid_comment_gini = results_df[results_df['period'] == 'pre-COVID']['comment_count_gini']
+covid_comment_gini = results_df[results_df['period'] == 'COVID']['comment_count_gini']
+post_covid_comment_gini = results_df[results_df['period'] == 'post-COVID']['comment_count_gini']
+
+# Setting the width of the bars
+bar_width = 0.25
+
+# Setting the position of the bars on the x-axis
+r1 = np.arange(len(topics))
+r2 = [x + bar_width for x in r1]
+r3 = [x + bar_width for x in r2]
+
+# Creating the bar plot
+plt.bar(r1, pre_covid_comment_gini, color='skyblue', width=bar_width, edgecolor='black', label='Pre-COVID')
+plt.bar(r2, covid_comment_gini, color='salmon', width=bar_width, edgecolor='black', label='COVID')
+plt.bar(r3, post_covid_comment_gini, color='lightgreen', width=bar_width, edgecolor='black', label='Post-COVID')
+
+# Adding xticks on the middle of the group bars
+plt.xlabel('Topic', fontweight='bold')
+plt.xticks([r + bar_width for r in range(len(topics))], topics)
+
+# Adding a legend
+plt.legend()
+
+# Showing the plot
+plt.title('Gini Coefficients for Comment Count')
+plt.ylabel('Gini Coefficient')
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
+plt.show()
 
 
 
