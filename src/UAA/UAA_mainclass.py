@@ -9,11 +9,16 @@ module_path = '/Users/jacoponudo/Documents/thesis/src/UAA'
 sys.path.append(module_path)
 from UAA_package.NLP_tools import *
 from UAA_package.functions import *
-import matplotlib as plt
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 from tqdm import tqdm
+import pandas as pd
+import os
+import seaborn as sns
+from sklearn.linear_model import LinearRegression
+
+
 
 # Create output directory if it doesn't exist
 output_dir = '/Users/jacoponudo/Documents/thesis/src/UAA/output'
@@ -135,8 +140,6 @@ results_df.set_index('topic', inplace=True)
 
 
 # Importing necessary libraries
-import matplotlib.pyplot as plt
-import numpy as np
 
 # Extracting data for plotting
 topics = results_df['topic'].unique()
@@ -206,5 +209,40 @@ plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
 plt.show()
 
+#3.3 - Distance prevoous comment and Toxicity
+
+# Filtra il DataFrame per includere solo le righe con almeno 30 commenti
+df = data[data['number_of_comments'] > 30]
+df = df.dropna(subset=['temporal_distance_from_previous_comment_h', 'toxicity_score'])
+
+# Creazione dello scatterplot con alpha
+sns.scatterplot(data=df, x='temporal_distance_from_previous_comment_h', y='toxicity_score', alpha=0.1)
+plt.xlabel('Temporal Distance from Previous Comment (hours)')
+plt.ylabel('Toxicity Score')
+plt.title('Scatterplot of Temporal Distance vs Toxicity Score')
+
+# Adattamento del modello di regressione lineare
+X = df[['temporal_distance_from_previous_comment_h']]
+y = df['toxicity_score']
+model = LinearRegression()
+model.fit(X, y)
+
+# Tracciamento della linea di regressione
+plt.plot(X, model.predict(X), color='red')
+
+plt.show()
+
+
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Creazione dei boxplot
+sns.boxplot(data=df,y='temporal_distance_from_previous_comment_h', x='is_toxic', showfliers=False)
+plt.xlabel('Temporal Distance from Previous Comment (hours)')
+plt.ylabel('Toxicity (is_toxic)')
+plt.title('Boxplot of Toxicity vs Temporal Distance')
+
+plt.show()
 
 
