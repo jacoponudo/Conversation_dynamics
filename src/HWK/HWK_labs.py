@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from HWK_package.functions import *
-from HWK_package.hawkes import *
+
 from scipy import stats
 import random 
 from scipy.stats import chi2
@@ -33,11 +33,10 @@ user_toxic_activity=dataset.groupby(['root_submission','user'])['is_toxic'].sum(
 user_toxic_activity[user_toxic_activity['is_toxic']>10]
 
 
-
-dataset_user=dataset[dataset.user=='smokratez'].copy()
+dataset_user=dataset[dataset.user=='Mumbleberry'].copy()
 dataset_user.sort_values(by='created_at', inplace=True)
 dataset_user.root_submission.value_counts()
-dataset_user=dataset_user[dataset_user.root_submission=='1073880'].copy()
+dataset_user=dataset_user[dataset_user.root_submission=='3348062'].copy()
 
 
 #RQ1: Could we use a hawkes process to model the inter arrival time of comments?
@@ -46,7 +45,7 @@ dataset_user=dataset_user[dataset_user.root_submission=='1073880'].copy()
 observed_data = np.array([np.datetime64(x.replace(tzinfo=None)).astype(np.int64) for x in dataset_user['created_at']])
 mean_lag=np.mean(np.diff(observed_data))
 ℋ_t=observed_data-min(observed_data)+mean_lag
-𝛉_exp=exp_mle(ℋ_t,max(ℋ_t)+mean_lag)
+𝛉_exp=𝛉_exp_simple=exp_mle(ℋ_t,max(ℋ_t)+mean_lag)
 
 # Faccio il QQplot del modello
 tsShifted = exp_hawkes_compensators(ℋ_t, 𝛉_exp)
@@ -74,7 +73,7 @@ observed_data = np.array([np.datetime64(x.replace(tzinfo=None)).astype(np.int64)
 mean_lag=np.mean(np.diff(observed_data))
 ℋ_t=observed_data-min(observed_data)+mean_lag
 𝒯_T=list(dataset_user.toxicity_score)
-𝛉_exp=exp_mle_toxicity(ℋ_t,𝒯_T,max(ℋ_t))
+𝛉_exp=𝛉_exp_toxicity=exp_mle_toxicity(ℋ_t,𝒯_T,max(ℋ_t))
 
 # Faccio il QQplot del modello
 tsShifted = exp_hawkes_compensators_toxicity(ℋ_t,𝒯_T, 𝛉_exp)
@@ -96,5 +95,43 @@ print('errore modello tossicità',distances.mean())
 
 
 
+#RQ3 Posso stimare i parametri di ciascun utente studiandone la verosimiglianza congiunta su tutti i threads?
+#---------------------------- Using α ---------------------------------------------------
+data_user = filter_dataset(dataset, 'Mumbleberry', min_comments=3, sample=False)
+ℋ_T_list, magnitude_list,time_list = prepare_data(data_user, dataset)
+θ_exp_mle_T = exponential_mle(ℋ_T_list, time_list)
+
+tsShifted = exp_hawkes_compensators(ℋ_t, θ_exp_mle_T)
+iat = np.diff(np.insert(tsShifted, 0, 0))
+qqplot(iat, dist=stats.expon, fit=True, line="45")
+plt.show()
+
+slope, intercept = sm.OLS(iat, sm.add_constant(stats.expon.ppf((np.arange(1, len(iat) + 1) - 0.5) / len(iat)))).fit().params
+print("Pendenza della linea di riferimento adattata:", slope)
+
+slope, intercept = 1, 0
+predicted_values = slope * np.arange(1, len(iat) + 1) + intercept
+
+distances = np.abs(iat - predicted_values)
+print('errore modello tossicità',distances.mean())
 
 
+
+#---------------------------- Using 2α ---------------------------------------------------
+data_user = filter_dataset(dataset, 'Mumbleberry', min_comments=3, sample=False)
+ℋ_T_list, magnitude_list,time_list = prepare_data(data_user, dataset)
+θ_exp_mle_T = exponential_mle_toxicity(ℋ_T_list, magnitude_list, time_list)
+
+tsShifted = exp_hawkes_compensators_toxicity(ℋ_t,𝒯_T, θ_exp_mle_T)
+iat = np.diff(np.insert(tsShifted, 0, 0))
+qqplot(iat, dist=stats.expon, fit=True, line="45")
+plt.show()
+
+slope, intercept = sm.OLS(iat, sm.add_constant(stats.expon.ppf((np.arange(1, len(iat) + 1) - 0.5) / len(iat)))).fit().params
+print("Pendenza della linea di riferimento adattata:", slope)
+
+slope, intercept = 1, 0
+predicted_values = slope * np.arange(1, len(iat) + 1) + intercept
+
+distances = np.abs(iat - predicted_values)
+print('errore modello tossicità',distances.mean())
