@@ -72,7 +72,7 @@ def exponential_mle(event_times, T, initial_parameters=np.array([1.0, 2.0, 3.0])
     Returns:
         array-like: MLE estimates for parameters (λ, α, β).
     """
-    eps = 1e-5
+    eps = 0.00001e-300
     parameter_bounds = ((eps, None), (eps, None), (eps, None))
     loss_function = lambda parameters: -sum_individual_exp_log_likelihood(event_times, T, parameters)
     mle_parameters = minimize(loss_function, initial_parameters, bounds=parameter_bounds).x
@@ -147,7 +147,7 @@ def exponential_mle_toxicity(event_times, magnitude, T, initial_parameters=np.ar
     Returns:
         array-like: MLE estimates for parameters (λ, α, α_T, β).
     """
-    eps = 1e-30
+    eps = 0.00001e-300
     parameter_bounds = ((eps, None), (eps, None), (eps, None), (eps, None))
     loss_function = lambda parameters: -sum_individual_exp_log_likelihood_toxicity(event_times, magnitude, T, parameters)
     mle_parameters = minimize(loss_function, initial_parameters, bounds=parameter_bounds).x
