@@ -230,4 +230,16 @@ plt.title('Boxplot of Toxicity vs Temporal Distance')
 plt.savefig(os.path.join(output_dir, 'intercomment_arrival_time_vs_toxicity_boxplot_3_3_2.png'))
 plt.show()
 
+#3.4 - Increase of activity during covid NOT WOEJKING
+data['date']=data['created_at'].dt.month #aggiungi tutti i  mesi anche quelli in cui non è stato fatto alcun commento 
+
+df=data.groupby(['user', 'date'])['comment_id'].nunique().reset_index() #aggrgea anbcge qauando è zero
+df['date'] = pd.to_datetime(df['date'])
+df['period'] = pd.cut(df['date'], bins=[pd.Timestamp('2015-01-01'), pd.Timestamp('2020-03-01'), pd.Timestamp('2020-05-01'), pd.Timestamp('2024-01-01')], labels=['pre-COVID', 'COVID', 'post-COVID'])
+df['comment_id'] = df['comment_id'].fillna(0)
+
+grouped_data = df.groupby(['user', 'period'])['comment_id'].mean().reset_index()
+pre_covid_data = grouped_data[grouped_data['period'] == 'pre-COVID']
+covid_data = grouped_data[grouped_data['period'] == 'COVID']
+merged_data = pre_covid_data.merge(covid_data, on='user', suffixes=('_pre_covid', '_covid'), how='outer')
 
