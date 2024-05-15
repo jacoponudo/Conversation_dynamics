@@ -1238,7 +1238,7 @@ def exp_hawkes_compensators_toxicity(ℋ_t,𝒯_T, 𝛉):
 ### Simulate colllecive behaviour 
 import pandas as pd
 
-def simulate_hawkes__collective_behaviour(root,dataset,alpha,beta,grid_search_results):
+def simulate_hawkes_collective_behaviour(root,dataset,alpha,beta,grid_search_results):
   parameter_pool=grid_search_results
   root=dataset[dataset['root_submission']=='0']
   user_activity=root['user'].value_counts().reset_index()
