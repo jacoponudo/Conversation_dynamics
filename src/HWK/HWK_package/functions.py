@@ -1235,6 +1235,89 @@ def exp_hawkes_compensators_toxicity(ℋ_t,𝒯_T, 𝛉):
         t_prev = t_i
     return Λs
 
+### Simulate colllecive behaviour 
+import pandas as pd
+
+def simulate_hawkes__collective_behaviour(root,dataset,alpha,beta,grid_search_results):
+  parameter_pool=grid_search_results
+  root=dataset[dataset['root_submission']=='0']
+  user_activity=root['user'].value_counts().reset_index()
+  active_users=user_activity[user_activity['count']>2]['user']
+  root=root[root['user'].isin(active_users)]
+  user_activity=root['user'].value_counts().reset_index()
+
+  parameter_pool=parameter_pool[(parameter_pool['beta']==beta) & (parameter_pool['alpha']<alpha) ]
+
+  root.sort_values(by='created_at', inplace=True)
+
+  observed_data = np.array([np.datetime64(x.replace(tzinfo=None)).astype(np.int64) for x in root['created_at']])
+  start_conversation=np.datetime64(min(root['created_at']).replace(tzinfo=None))
+  end_conversation=np.datetime64(max(root['created_at']).replace(tzinfo=None))
+
+  ℋ_t = (observed_data - start_conversation.astype(np.int64)) / (end_conversation.astype(np.int64) - start_conversation.astype(np.int64))
+
+  first_comments_table = root.groupby('user')['created_at'].first().reset_index()
+  first_comments = np.array([np.datetime64(x.replace(tzinfo=None)).astype(np.int64) for x in first_comments_table['created_at']])
+  oss_staring_conversation = (first_comments - start_conversation.astype(np.int64)) / (end_conversation.astype(np.int64) - start_conversation.astype(np.int64))
+  first_comments_table['created_at']=oss_staring_conversation
+
+  last_comments_table = root.groupby('user')['created_at'].last().reset_index()
+  last_comments = np.array([np.datetime64(x.replace(tzinfo=None)).astype(np.int64) for x in last_comments_table['created_at']])
+  oss_finishing_conversation = (last_comments - start_conversation.astype(np.int64)) / (end_conversation.astype(np.int64) - start_conversation.astype(np.int64))
+  last_comments_table['created_at']=oss_finishing_conversation
+
+
+
+  simulated_thread_df = pd.DataFrame(columns=['user', 'timestamp'])  # Creiamo il DataFrame vuoto
+
+  for index, row in (user_activity.iterrows()):
+    user_name = row['user']
+    number_of_comments = row['count']
+    t_init=first_comments_table[first_comments_table['user']==user_name]['created_at'].iloc[0]
+    t_final=last_comments_table[last_comments_table['user']==user_name]['created_at'].iloc[0]
+    parameters_cool = parameter_pool[parameter_pool['mu_expected_value'].round() == number_of_comments-2]
+    i=1
+    while len(parameters_cool)==0:
+      i+=1
+      parameters_cool = parameter_pool.query(f"({number_of_comments - i} <= mu_expected_value.round() <= {number_of_comments + i})")
+    parameters_cool = parameters_cool.loc[parameters_cool['alpha'].idxmax()]
+    theta = np.array(parameters_cool[['lambda', 'alpha', 'beta']])
+
+    simulated_timestamp = exp_simulate_by_composition_alt(theta, 1)
+    simulated_timestamp=(simulated_timestamp*(t_final-t_init))+t_init
+    simulated_timestamp= np.concatenate(([t_init], simulated_timestamp,[t_final]))
+    user_df = pd.DataFrame({'user': [user_name] * (len(simulated_timestamp)), 'timestamp': simulated_timestamp})
+    simulated_thread_df = pd.concat([simulated_thread_df, user_df], ignore_index=True)
+
+  simulated_thread_df.sort_values(by='timestamp', inplace=True)
+  ℋ_t_simulated=simulated_thread_df['timestamp']
+
+  # Test with metrics
+
+
+  grouped_counts = root.groupby('user')['comment_id'].count()
+  selected_users = grouped_counts[grouped_counts > 5].reset_index().user
+
+  root['time']=ℋ_t.round(2)
+  root=root[root['user'].isin(selected_users)]
+  simulated_thread_df=simulated_thread_df[simulated_thread_df['user'].isin(selected_users)]
+
+
+  ℋ_t_simulated=simulated_thread_df['timestamp']
+  ℋ_t=root['time']
+  return ℋ_t,ℋ_t_simulated
+
+
+# Ccreate cumulate distribution from timestamps
+def F(x, H_t):
+    cumulative_series = []
+    for i in range(len(x)):
+        count = 0
+        for t in H_t:
+            if t <= x[i]:
+                count += 1
+        cumulative_series.append(count)
+    return cumulative_series
 
 
 
