@@ -1246,7 +1246,7 @@ def simulate_hawkes_collective_behaviour(root,dataset,alpha,beta,grid_search_res
   root=root[root['user'].isin(active_users)]
   user_activity=root['user'].value_counts().reset_index()
 
-  parameter_pool=parameter_pool[(parameter_pool['beta']==beta) & (parameter_pool['alpha']<alpha) ]
+  parameter_pool=parameter_pool[(parameter_pool['beta']==beta) & (parameter_pool['alpha']<=alpha) ]
 
   root.sort_values(by='created_at', inplace=True)
 
