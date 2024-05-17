@@ -42,20 +42,14 @@ dataset = pd.read_parquet(source_data)
 # Prepare observatios
 x_values = np.arange(0, 1, 0.0001)  #griglia
 root_submission='0'
-root = dataset[dataset['root_submission'] == root_submission]
+root = dataset[dataset['root_submission'] == root_submission].copy()
 root.sort_values(by='created_at', inplace=True)
 
-# Replicate with a model the conversation among users
 users_acticvity=root.groupby('user')['comment_id'].count().reset_index()
 users_acticvity=users_acticvity[users_acticvity['comment_id']>2]['user']
 root=root[root['user'].isin(users_acticvity)]
 users=root['user'].unique()#.sample(10).unique()
 root=root[root['user'].isin(users)].reset_index()
-
-
-
-
-
 
 observed_data = np.array([np.datetime64(x.replace(tzinfo=None)).astype(np.int64) for x in root['created_at']])
 start_conversation = np.datetime64(min(root['created_at']).replace(tzinfo=None))
@@ -79,28 +73,32 @@ import random
 import time
 
 results=[]
+
+alpha_grid = np.concatenate(([0.0000001], np.arange(0.5, 5.0, 0.5)))
 lambda_grid =(np.arange(1.0, 10.0,1.0))
-alpha_grid = np.concatenate(([0.0001], np.arange(1.0, 7.0, 1.0)))
-beta_grid = np.arange(0.01, 0.2, 0.1)
-theta_combinations = list(product(lambda_grid, alpha_grid, beta_grid))
+beta_grid = np.arange(0.05, 0.6, 0.05)
+p_grid=np.arange(0.05, 0.3, 0.05)
+
+theta_combinations = list(product(lambda_grid, alpha_grid, beta_grid,p_grid))
 random.shuffle(theta_combinations)
 
-
-for l, alpha, beta in tqdm(theta_combinations, total=len(theta_combinations)):
+    
+for l, alpha, beta,p in tqdm(theta_combinations, total=len(theta_combinations)):
     
     start_time = time.time()  # Memorizza il tempo di inizio dell'iterazione
     
-    lambdas = [lamda] * n_users
-    alphas = [[alpha] * n_users] * n_users
-    betas = [[beta] * n_users] * n_users
+    alphas = generate_weighted_adjacency_matrix(alpha,n_users , p)
+    lambdas = np.random.exponential(scale=1/l, size=n_users)
+    betas = [list(np.random.uniform(0, beta, n_users)) for _ in range(n_users)]
+
 
     end_time = 1.0  # Simula per 10 secondi
 
     hawkes_process = SimuHawkesExpKernels(adjacency=alphas, decays=betas, baseline=lambdas, end_time=end_time, force_simulation=True, verbose=False)
     hawkes_process.simulate()
-    mu_ks, sd_ks = metrix(hawkes_process, users)
+    KS, pvalue = metrix(hawkes_process, users,root,ECDF)
     
-    results.append({'root': root_submission, 'lambda': l, 'alpha': alpha, 'beta': beta, 'mu_ks': mu_ks, 'sd_ks': sd_ks})
+    results.append({'root': root_submission, 'lambda': l, 'alpha': alpha, 'beta': beta,'p':p, 'KS': KS, 'pvalue': pvalue})
 
     # Verifica se è trascorso più di un minuto, in tal caso interrompi l'iterazione
     if time.time() - start_time > 120:
@@ -108,4 +106,40 @@ for l, alpha, beta in tqdm(theta_combinations, total=len(theta_combinations)):
         continue
 df = pd.DataFrame(results)
 df.to_csv('/Users/jacoponudo/Documents/thesis/src/HWK/outputs/grid_search_Sintetizzatore.csv', index=False) 
+
+
+
+
+
+
+
+
+
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Assuming ℋ_t and ℋ_t_simulated are arrays of event times
+
+# Calculate cumulative distributions
+
+hawkes_process = SimuHawkesExpKernels(adjacency=alphas, decays=betas, baseline=lambdas, end_time=end_time, force_simulation=True, verbose=False)
+hawkes_process.simulate()
+
+
+
+# Plot the cumulative distributions
+plt.plot(x_values, cumulative_dist_ℋ_t, label='ℋ_t Cumulative Distribution')
+plt.plot(x_values, cumulative_dist_ℋ_t_simulated, label='ℋ_t_simulated Cumulative Distribution')
+
+# Add labels and legend
+plt.xlabel('Event Time')
+plt.ylabel('Cumulative Probability')
+plt.legend()
+
+# Show plot
+plt.show()
+
 
