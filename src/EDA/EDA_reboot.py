@@ -1,6 +1,6 @@
 # Notes for Jacopo:
 '''
-This script from the outpu of PRO do a little bit of EDA to undestand better how thread develope
+This EDAA  is for Walter, in order to find togheter a mattern or a signal that needs to be investigated
 '''
 
 #### Stage 2 - Exploratory Data Analysis ####
@@ -60,9 +60,13 @@ result_df = pd.DataFrame(results)
 
 result_df.to_csv('/Users/jacoponudo/Documents/thesis/src/EDA/output/IAT_Toxicity_by_position.csv')
 
+result_df.columns()
 
 
 
+
+
+# 1 Il valore  maggiore di IAT dove si posiziona?
 
 max_positions=[]
 
@@ -78,13 +82,34 @@ for i,row in result_df.iterrows():
 
     
 
-plt.scatter(positions, IAT, label=f'Row {i+1}')
 
-plt.title('Scatterplot of Positions vs IAT Values')
-plt.xlabel('Position')
-plt.ylabel('IAT')
-plt.legend()
+
+# L'inter arrival time tende a essere piu lungo alla fine e all inizio 
+
+bins = np.arange(0, 1.01, 0.2)
+
+# Creazione dell'istogramma
+plt.hist(max_positions, bins=bins, edgecolor='black', align='left')
+
+# Aggiunta del titolo e delle etichette degli assi
+plt.title('Istogramma delle Posizioni Massime')
+plt.xlabel('Posizione del commento')
+plt.ylabel('Frequenza')
+
+# Mostra l'istogramma
 plt.show()
+
+
+
+
+
+
+# Se non c'è un effetto a parabola dell'IAT, ci sono delle alterazioni della  tossicità?
+
+
+
+
+
 
 
 
@@ -126,17 +151,3 @@ plt.ylabel(y_column)
 plt.show()
 
 '''
-# L'inter arrival time tende a essere piu lungo alla fine e all inizio 
-
-bins = np.arange(0, 1.01, 0.05)
-
-# Creazione dell'istogramma
-plt.hist(max_positions, bins=bins, edgecolor='black', align='left')
-
-# Aggiunta del titolo e delle etichette degli assi
-plt.title('Istogramma delle Posizioni Massime')
-plt.xlabel('Posizioni')
-plt.ylabel('Frequenza')
-
-# Mostra l'istogramma
-plt.show()
