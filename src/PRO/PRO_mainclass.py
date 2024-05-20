@@ -29,6 +29,9 @@ Essential to add some useful variables before to start working. This is the vari
 * number_of_users
 * number_of_comments_user_in_thread
 * sequence_number_comment_user_thread
+* inter arrival time user
+* inter arrival time user-thread
+* inter arrival time user-thread
 '''
 
 # Filter mantaining just threads with more than 50 comments
@@ -77,4 +80,31 @@ data = data.sort_values(by=['user', 'created_at'])
 data['created_at'] = pd.to_datetime(data['created_at'])
 data['temporal_distance_from_previous_comment_h'] = data.groupby('user')['created_at'].diff().dt.total_seconds() / 3600
 
-data.to_csv(root+'src/PRO/output/'+social_media_name+'_processed.csv')
+data['root_submission']=data['root_submission'].astype('int')
+
+data['created_at'] = pd.to_datetime(data['created_at'])
+
+data = data.sort_values(by=['user', 'created_at'])
+data['IAT_user'] = data.groupby('user')['created_at'].diff().dt.total_seconds()
+
+data = data.sort_values(by=['user','root_submission', 'created_at'])
+data['IAT_user_thread'] = data.groupby(['user','root_submission'])['created_at'].diff().dt.total_seconds()
+
+data = data.sort_values(by=['root_submission', 'created_at'])
+data['IAT_thread'] = data.groupby('root_submission')['created_at'].diff().dt.total_seconds()
+
+
+data=data[['comment_id', 'text', 'video_id', 'user', 'upvotes',
+       'downvotes', 'depth', 'root_submission', 'topic', 'toxicity_score',
+       'created_at', 'social', 'percentile',
+       'sequential_number_of_comment_by_user_in_thread',
+       'number_of_comments_by_user_in_thread', 'thread_birth',
+       'temporal_distance_birth_h', 'thread_lifetime_h', 'number_of_users',
+       'unique_words_count', 'number_of_comments', 'language',
+       'unique_word_user', 'temporal_distance_from_previous_comment_h',
+       'IAT_user', 'IAT_user_thread', 'IAT_thread']]
+
+data.to_csv(root+'src/PRO/output/'+social_media_name+'_processed.csv', index=False)
+
+
+
