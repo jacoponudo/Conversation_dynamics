@@ -1,7 +1,7 @@
 import sys
 module_path = '/Users/jacoponudo/Documents/thesis/src/PRO'
 sys.path.append(module_path)
-import langid
+
 import pandas as pd
 
 def add_percentile_column(group):
@@ -18,15 +18,6 @@ def count_unique_words(text):
         return 0
 
 
-from langdetect import detect
-
-def detect_language(text):
-    try:
-        language = detect(text)
-        return language
-    except:
-        # Handle the case where language detection fails
-        return 'en'
 
 
 import nltk
