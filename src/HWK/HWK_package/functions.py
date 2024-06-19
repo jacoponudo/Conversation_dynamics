@@ -66,7 +66,7 @@ def calculate_ECDF(df, time_intervals):
 
 def plot_ECDF(df,level=95):
     plt.figure(figsize=(12, 8))
-    sns.lineplot(data=df, x='Time Grid Value', y='Share', hue='Platform', err_style='band', ci=level)
+    sns.lineplot(data=df, x='Time Grid Value', y='Share', hue='Platform', err_style='band',errorbar=('ci', level) )
     plt.title('Distribution of Conversation Lifetime Across Percentiles (Reddit vs Facebook)')
     plt.ylabel('Lifetime (minutes)')
     plt.xlabel('Percentile')
@@ -74,7 +74,7 @@ def plot_ECDF(df,level=95):
     plt.legend(title='Platform')
     plt.show()
     
-def calculate_loss(observed, simulated):
+adddef calculate_loss(observed, simulated):
     combined_results = pd.merge(observed, simulated, on=['post_id', 'Time Grid Value'], suffixes=('_Observed', '_Simulated'))
     combined_results['Errors'] = abs(combined_results['Share_Simulated'] - combined_results['Share_Observed'])
     total_error = combined_results['Errors'].sum()
