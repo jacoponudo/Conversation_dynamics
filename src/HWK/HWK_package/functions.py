@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import itertools
 from tqdm import tqdm
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 def simulate_inital_comment(alpha, beta, size=1):
     return np.random.beta(alpha, beta, size)
@@ -62,3 +64,12 @@ def calculate_ECDF(df, time_intervals):
 
     return final_results
 
+def plot_ECDF(df,level=95):
+    plt.figure(figsize=(12, 8))
+    sns.lineplot(data=df, x='Time Grid Value', y='Share', hue='Platform', err_style='band', ci=level)
+    plt.title('Distribution of Conversation Lifetime Across Percentiles (Reddit vs Facebook)')
+    plt.ylabel('Lifetime (minutes)')
+    plt.xlabel('Percentile')
+    plt.grid(False)
+    plt.legend(title='Platform')
+    plt.show()
