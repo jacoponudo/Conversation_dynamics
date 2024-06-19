@@ -74,7 +74,7 @@ def plot_ECDF(df,level=95):
     plt.legend(title='Platform')
     plt.show()
     
-adddef calculate_loss(observed, simulated):
+def calculate_loss(observed, simulated):
     combined_results = pd.merge(observed, simulated, on=['post_id', 'Time Grid Value'], suffixes=('_Observed', '_Simulated'))
     combined_results['Errors'] = abs(combined_results['Share_Simulated'] - combined_results['Share_Observed'])
     total_error = combined_results['Errors'].sum()
