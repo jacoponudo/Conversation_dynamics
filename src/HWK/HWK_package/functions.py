@@ -38,16 +38,16 @@ def simulate_data(social, alpha, lambda_, mu, sd, a, b, k=1.0, num_threads=100):
             timing = [x for x in timing if x <= 1]
 
             for t in timing:
-                data.append({'user_id': f'User_{i}', 'post_id': th, 'temporal_distance_birth_base_1000h': t})
+                data.append({'user_id': f'User_{i}', 'post_id': th, 'temporal_distance_birth_base_100h': t})
 
     simulated = pd.DataFrame(data)
-    observed = social[social['post_id'].isin(simulated['post_id'].unique())][['user_id', 'post_id', 'temporal_distance_birth_base_1000h']]
+    observed = social[social['post_id'].isin(simulated['post_id'].unique())][['user_id', 'post_id', 'temporal_distance_birth_base_100h']]
 
     return simulated, observed
 
 def calculate_ECDF(df, time_intervals):
     results_list = []
-    grouped = df.groupby('post_id')['temporal_distance_birth_base_1000h']
+    grouped = df.groupby('post_id')['temporal_distance_birth_base_100h']
 
     for post_id, group_data in tqdm(grouped, desc=f"Processing DataFrame"):
         results = pd.DataFrame(index=time_intervals)
@@ -68,8 +68,8 @@ def plot_ECDF(df,level=95):
     plt.figure(figsize=(12, 8))
     sns.lineplot(data=df, x='Time Grid Value', y='Share', hue='Platform', err_style='band',errorbar=('ci', level) )
     plt.title('Distribution of Conversation Lifetime Across Percentiles (Reddit vs Facebook)')
-    plt.ylabel('Lifetime (minutes)')
-    plt.xlabel('Percentile')
+    plt.ylabel('Fraction of comments')
+    plt.xlabel('Time (base 100)')
     plt.grid(False)
     plt.legend(title='Platform')
     plt.show()
