@@ -14,9 +14,15 @@ def simulate_number_of_comments(alpha, lambd):
     else:
         return np.random.poisson(lambd)
 
-def simulate_data(social, alpha, lambda_, mu, sd, a, b, k=1.0, num_threads=100):
+def simulate_data(social, alpha, lambda_, mu, sd, a, b, k=1.0, num_threads=100, activate_tqdm=True):
     data = []
-    for th in tqdm(social['post_id'].unique()[:num_threads]):
+    thread_ids = social['post_id'].unique()[:num_threads]
+    
+    # Use tqdm conditionally
+    if activate_tqdm:
+        thread_ids = tqdm(thread_ids)
+    
+    for th in thread_ids:
         thread = social[social['post_id'] == th]
         number_of_users = thread['user_id'].nunique()
         T0s = simulate_inital_comment(a, b, size=number_of_users)
@@ -30,9 +36,9 @@ def simulate_data(social, alpha, lambda_, mu, sd, a, b, k=1.0, num_threads=100):
                 if j == 0:
                     timing[j] = T0
                 elif j == N-1:
-                    timing[j] = abs(np.random.normal(mu, sd) )
+                    timing[j] = abs(np.random.normal(mu, sd))
                 else:
-                    timing[j] = abs(np.random.normal(mu * k, sd) )
+                    timing[j] = abs(np.random.normal(mu * k, sd))
 
             timing = np.cumsum(timing)
             timing = [x for x in timing if x <= 1]
@@ -45,11 +51,15 @@ def simulate_data(social, alpha, lambda_, mu, sd, a, b, k=1.0, num_threads=100):
 
     return simulated, observed
 
-def calculate_ECDF(df, time_intervals):
+def calculate_ECDF(df, time_intervals, activate_tqdm=True):
     results_list = []
     grouped = df.groupby('post_id')['temporal_distance_birth_base_100h']
-
-    for post_id, group_data in tqdm(grouped, desc=f"Processing DataFrame"):
+    
+    # Use tqdm conditionally
+    if activate_tqdm:
+        grouped = tqdm(grouped, desc="Processing DataFrame")
+    
+    for post_id, group_data in grouped:
         results = pd.DataFrame(index=time_intervals)
         total_comments = len(group_data)
 
@@ -57,12 +67,15 @@ def calculate_ECDF(df, time_intervals):
             comments_within_time = np.sum(group_data < time)
             share = comments_within_time / total_comments
             results.at[time, post_id] = share
+        
         results = results.stack().reset_index()
         results.columns = ['Time Grid Value', 'post_id', 'Share']
         results_list.append(results)
+    
     final_results = pd.concat(results_list, ignore_index=True)
 
     return final_results
+
 
 def plot_ECDF(df,level=95):
     plt.figure(figsize=(12, 8))
