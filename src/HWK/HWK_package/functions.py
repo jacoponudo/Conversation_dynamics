@@ -4,9 +4,10 @@ import itertools
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.stats import beta
 
-def simulate_inital_comment(alpha, beta, size=1):
-    return np.random.beta(alpha, beta, size)
+def simulate_inital_comment(a, b,loc,scale, size=1):
+    return  beta.rvs(a, b, loc, scale, size)
 
 def simulate_number_of_comments(alpha, lambd):
     if np.random.rand() < alpha:
@@ -14,7 +15,7 @@ def simulate_number_of_comments(alpha, lambd):
     else:
         return np.random.poisson(lambd)
 
-def simulate_data(social, alpha, lambda_, mu, sd, a, b, k=1.0, num_threads=100, activate_tqdm=True):
+def simulate_data(social, alpha, lambda_, mu, sd, a, b,loc,scale, k=1.0, num_threads=100, activate_tqdm=True):
     data = []
     thread_ids = social['post_id'].unique()[:num_threads]
     
@@ -25,7 +26,7 @@ def simulate_data(social, alpha, lambda_, mu, sd, a, b, k=1.0, num_threads=100, 
     for th in thread_ids:
         thread = social[social['post_id'] == th]
         number_of_users = thread['user_id'].nunique()
-        T0s = simulate_inital_comment(a, b, size=number_of_users)
+        T0s = simulate_inital_comment( a, b,loc,scale, size=number_of_users)
 
         for i in range(number_of_users):
             T0 = T0s[i]
