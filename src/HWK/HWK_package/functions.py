@@ -37,9 +37,9 @@ def simulate_data(social, alpha, lambda_, mu, sd, a, b,loc,scale, k=1.0, num_thr
                 if j == 0:
                     timing[j] = T0
                 elif j == N-1:
-                    timing[j] = abs(np.random.normal(mu, sd))
+                    timing[j] = abs(np.random.normal(mu* k, sd))
                 else:
-                    timing[j] = abs(np.random.normal(mu * k, sd))
+                    timing[j] = abs(np.random.normal(mu , sd))
 
             timing = np.cumsum(timing)
             timing = [x for x in timing if x <= 1]
