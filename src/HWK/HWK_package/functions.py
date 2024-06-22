@@ -5,6 +5,9 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import beta
+from scipy.stats import burr
+
+# Supponendo che queste variabili siano già definite: alpha, lambda_, c, d, l, s, T0s
 
 def simulate_inital_comment(a, b,loc,scale, size=1):
     return  beta.rvs(a, b, loc, scale, size)
@@ -15,7 +18,7 @@ def simulate_number_of_comments(alpha, lambd):
     else:
         return np.random.poisson(lambd)
 
-def simulate_data(social, alpha, lambda_, mu, sd, a, b,loc,scale, k=1.0, num_threads=100, activate_tqdm=True):
+def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s, num_threads=100, activate_tqdm=True):
     data = []
     thread_ids = social['post_id'].unique()[:num_threads]
     
@@ -31,16 +34,12 @@ def simulate_data(social, alpha, lambda_, mu, sd, a, b,loc,scale, k=1.0, num_thr
         for i in range(number_of_users):
             T0 = T0s[i]
             N = int(simulate_number_of_comments(alpha, lambda_) + 1)
-            timing = [0] * N
-
-            for j in range(N):
-                if j == 0:
-                    timing[j] = T0
-                elif j == N-1:
-                    timing[j] = abs(np.random.normal(mu* k, sd))
-                else:
-                    timing[j] = abs(np.random.normal(mu , sd))
-
+            if N > 1:
+                additional_timings = burr.rvs(c, d, l, s, size=N-1)
+                timing = np.concatenate(([T0], additional_timings))
+            else:
+                timing = np.array([T0])
+            timing = timing.tolist()
             timing = np.cumsum(timing)
             timing = [x for x in timing if x <= 1]
 
