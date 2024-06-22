@@ -34,12 +34,12 @@ def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s, num_threads=10
         for i in range(number_of_users):
             T0 = T0s[i]
             N = int(simulate_number_of_comments(alpha, lambda_) + 1)
-            timing = np.empty(N)
-            timing[0] = T0
             if N > 1:
-                timing[1:] = burr.rvs(c, d, l, s, size=N-1)
+                additional_timings = burr.rvs(c, d, l, s, size=N-1)
+                timing = np.concatenate(([T0], additional_timings))
+            else:
+                timing = np.array([T0])
             timing = timing.tolist()
-
             timing = np.cumsum(timing)
             timing = [x for x in timing if x <= 1]
 
