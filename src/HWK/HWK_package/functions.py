@@ -36,7 +36,7 @@ def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf,
             N = int(simulate_number_of_comments(alpha, lambda_) + 1)
             if N > 1:
                 additional_timings = burr.rvs(c, d, l, s, size=N-2)
-                final_comment_additional_timings(cf, df, lf, sf, size=1)
+                final_comment_additional_timings=burr.rvs(cf, df, lf, sf, size=1)
                 timing = np.concatenate(([T0], additional_timings,final_comment_additional_timings))
             else:
                 timing = np.array([T0])
