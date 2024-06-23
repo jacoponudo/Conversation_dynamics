@@ -18,7 +18,7 @@ def simulate_number_of_comments(alpha, lambd):
     else:
         return np.random.poisson(lambd)
 
-def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s, num_threads=100, activate_tqdm=True):
+def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=100, activate_tqdm=True):
     data = []
     thread_ids = social['post_id'].unique()[:num_threads]
     
@@ -35,8 +35,9 @@ def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s, num_threads=10
             T0 = T0s[i]
             N = int(simulate_number_of_comments(alpha, lambda_) + 1)
             if N > 1:
-                additional_timings = burr.rvs(c, d, l, s, size=N-1)
-                timing = np.concatenate(([T0], additional_timings))
+                additional_timings = burr.rvs(c, d, l, s, size=N-2)
+                final_comment_additional_timings(cf, df, lf, sf, size=1)
+                timing = np.concatenate(([T0], additional_timings,final_comment_additional_timings))
             else:
                 timing = np.array([T0])
             timing = timing.tolist()
