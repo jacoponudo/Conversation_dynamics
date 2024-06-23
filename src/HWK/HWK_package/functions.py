@@ -6,28 +6,20 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import beta
 from scipy.stats import burr
-from scipy.stats import nbinom
+
 # Supponendo che queste variabili siano già definite: alpha, lambda_, c, d, l, s, T0s
 
 def simulate_inital_comment(a, b,loc,scale, size=1):
     return  beta.rvs(a, b, loc, scale, size)
 
 
-def simulate_zinb(alpha, r, p, size=1):
-    # Simulate inflation component
-    inflate = np.random.binomial(1, alpha, size)
-    # Simulate count component (Negative Binomial distribution)
-    counts = nbinom.rvs(r, p, size=size)
-    # Combine inflated and counts
-    simulated_data = inflate * counts
-    return simulated_data
 def simulate_number_of_comments(alpha, lambd):
     if np.random.rand() < alpha:
         return 0
     else:
         return np.random.poisson(lambd)
 
-def simulate_data(social, a, b,loc,scale, alpha, r,p,c,d,l,s,cf, df, lf, sf, num_threads=100, activate_tqdm=True):
+def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=100, activate_tqdm=True):
     data = []
     thread_ids = social['post_id'].unique()[:num_threads]
     
@@ -42,7 +34,7 @@ def simulate_data(social, a, b,loc,scale, alpha, r,p,c,d,l,s,cf, df, lf, sf, num
 
         for i in range(number_of_users):
             T0 = T0s[i]
-            N = int(simulate_zinb(alpha, r, p) + 1)
+            N = int(simulate_number_of_comments(alpha, lambda_) + 1)
             if N > 1:
                 additional_timings = burr.rvs(c, d, l, s, size=N-2)
                 final_comment_additional_timings=burr.rvs(cf, df, lf, sf, size=1)
