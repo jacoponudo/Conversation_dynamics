@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import beta
 from scipy.stats import burr
-
+from scipy.stats import nbinom
 # Supponendo che queste variabili siano già definite: alpha, lambda_, c, d, l, s, T0s
 
 def simulate_inital_comment(a, b,loc,scale, size=1):
