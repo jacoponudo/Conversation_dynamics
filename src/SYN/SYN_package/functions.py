@@ -55,23 +55,28 @@ def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf,
 
 def calculate_ECDF(df, time_intervals, activate_tqdm=True):
     results_list = []
-    grouped = df.groupby('post_id')['temporal_distance_birth_base_100h']
+    df_c = df[df['sequential_number_of_comment_by_user_in_thread'] != 1]
+    grouped = df.groupby('post_id')[['temporal_distance_birth_base_100h', 'sequential_number_of_comment_by_user_in_thread']]
     
-    # Use tqdm conditionally
     if activate_tqdm:
         grouped = tqdm(grouped, desc="Processing DataFrame")
     
     for post_id, group_data in grouped:
         results = pd.DataFrame(index=time_intervals)
         total_comments = len(group_data)
-
-        for time in time_intervals:
-            comments_within_time = np.sum(group_data < time)
-            share = comments_within_time / total_comments
-            results.at[time, post_id] = share
         
-        results = results.stack().reset_index()
-        results.columns = ['Time Grid Value', 'post_id', 'Share']
+        for time in time_intervals:
+            comments_within_time = np.sum(group_data['temporal_distance_birth_base_100h'] < time)
+            comments_within_time_cc = np.sum(group_data[group_data['sequential_number_of_comment_by_user_in_thread'] != 1]['temporal_distance_birth_base_100h'] < time)
+            
+            share = comments_within_time / total_comments
+            share_cc = comments_within_time_cc / total_comments
+            
+            results.at[time, 'Share'] = share
+            results.at[time, 'Share_cc'] = share_cc
+        
+        results['post_id'] = post_id
+        results = results.reset_index().rename(columns={'index': 'Time Grid Value'})
         results_list.append(results)
     
     final_results = pd.concat(results_list, ignore_index=True)
@@ -79,19 +84,21 @@ def calculate_ECDF(df, time_intervals, activate_tqdm=True):
     return final_results
 
 
+
 def plot_ECDF(df,level=95):
     plt.figure(figsize=(12, 8))
-    sns.lineplot(data=df, x='Time Grid Value', y='Share', hue='Platform', err_style='band',errorbar=('ci', level) )
+    sns.lineplot(data=df, x='Time Grid Value', y='Share', hue='Platform', err_style='band',errorbar=('ci', level))
+    sns.lineplot(data=df, x='Time Grid Value', y='Share_cc', hue='Platform', err_style='band',errorbar=('ci', level) , linestyle='dotted') 
     plt.title('Distribution of Conversation Lifetime Across Percentiles (Reddit vs Facebook)')
     plt.ylabel('Fraction of comments')
     plt.xlabel('Time (base 100)')
     plt.grid(False)
     plt.legend(title='Platform')
-    plt.show()
+    plt.show() 
     
 def calculate_loss(observed, simulated):
     combined_results = pd.merge(observed, simulated, on=['post_id', 'Time Grid Value'], suffixes=('_Observed', '_Simulated'))
-    combined_results['Errors'] = abs(combined_results['Share_Simulated'] - combined_results['Share_Observed'])
+    combined_results['Errors'] = abs(combined_results['Share_Simulated'] - combined_results['Share_Observed'])+abs(combined_results['Share_cc_Simulated'] - combined_results['Share_cc_Observed'])
     total_error = combined_results['Errors'].sum()
 
     return total_error
