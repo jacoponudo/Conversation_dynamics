@@ -21,7 +21,7 @@ def simulate_number_of_comments(alpha, lambda_,):
     counts = np.round(counts).astype(int)
     counts[counts<0]=0
     # Combina le componenti inflazionate e di conteggio
-    simulated_data = inflate * counts
+    simulated_data = inflate * (counts+1)
     return simulated_data
     
 
