@@ -11,13 +11,20 @@ from scipy.stats import burr
 
 def simulate_inital_comment(a, b,loc,scale, size=1):
     return  beta.rvs(a, b, loc, scale, size)
+    
+def simulate_number_of_comments(alpha, lambda_,):
+    # Simula la componente inflazionata (produce 0 con probabilità alpha)
+    inflate = np.random.binomial(1, alpha, 1)
+    # Simula la componente contatore (distribuzione esponenziale negativa)
+    counts = np.random.exponential(1/lambda_, 1)
+    # Discretizza i valori esponenziali per ottenere valori di conteggio interi
+    counts = np.round(counts).astype(int)
+    counts[counts<0]=0
+    # Combina le componenti inflazionate e di conteggio
+    simulated_data = inflate * counts
+    return simulated_data
+    
 
-
-def simulate_number_of_comments(alpha, lambd):
-    if np.random.rand() < alpha:
-        return 0
-    else:
-        return np.random.poisson(lambd)
 
 def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=100, activate_tqdm=True):
     data = []
