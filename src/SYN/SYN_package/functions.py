@@ -45,7 +45,7 @@ def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf,
             timing = np.cumsum(timing)
             timing = [x for x in timing if x <= 1]
 
-            for i,t in timing.iterrows():
+            for i,t in enumerate(timing):
                 data.append({'user_id': f'User_{i}', 'post_id': th, 'temporal_distance_birth_base_100h': t,'sequential_number_of_comment_by_user_in_thread': i+1})
 
     simulated = pd.DataFrame(data)
