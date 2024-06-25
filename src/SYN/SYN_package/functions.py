@@ -49,7 +49,7 @@ def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf,
                 data.append({'user_id': f'User_{i}', 'post_id': th, 'temporal_distance_birth_base_100h': t,'sequential_number_of_comment_by_user_in_thread': i+1})
 
     simulated = pd.DataFrame(data)
-    observed = social[social['post_id'].isin(simulated['post_id'].unique())][['user_id', 'post_id', 'temporal_distance_birth_base_100h'],'sequential_number_of_comment_by_user_in_thread']
+    observed = social[social['post_id'].isin(simulated['post_id'].unique())][['user_id', 'post_id', 'temporal_distance_birth_base_100h','sequential_number_of_comment_by_user_in_thread']]
 
     return simulated, observed
 
