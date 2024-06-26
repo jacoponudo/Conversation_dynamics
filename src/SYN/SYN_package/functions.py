@@ -41,7 +41,7 @@ def simulate_data(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, l
     
     for th in thread_ids:
         thread = social[social['post_id'] == th]
-        number_of_users = simulate_number_of_users(gamma, min_users, size=1)
+        number_of_users = np.round(simulate_number_of_users(gamma, min_users, size=1))
         T0s = simulate_inital_comment( a, b,loc,scale, size=number_of_users)
 
         for i in range(number_of_users):
