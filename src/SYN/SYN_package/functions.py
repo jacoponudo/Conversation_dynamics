@@ -6,8 +6,13 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.stats import beta
 from scipy.stats import burr
+import powerlaw
 
 # Supponendo che queste variabili siano già definite: alpha, lambda_, c, d, l, s, T0s
+
+
+def simulate_number_of_users(gamma_fb, min_users, size=1):
+    return (xmin * (1 - np.random.rand(size))**(-1 / (alpha - 1)))
 
 def simulate_inital_comment(a, b,loc,scale, size=1):
     return  beta.rvs(a, b, loc, scale, size)
@@ -26,7 +31,7 @@ def simulate_number_of_comments(alpha, lambda_,):
     
 
 
-def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=100, activate_tqdm=True):
+def simulate_data(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=100, activate_tqdm=True,min_users=50):
     data = []
     thread_ids = social['post_id'].unique()[:num_threads]
     
@@ -36,7 +41,7 @@ def simulate_data(social, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf,
     
     for th in thread_ids:
         thread = social[social['post_id'] == th]
-        number_of_users = thread['user_id'].nunique()
+        number_of_users = simulate_number_of_users(gamma, min_users, size=1)
         T0s = simulate_inital_comment( a, b,loc,scale, size=number_of_users)
 
         for i in range(number_of_users):
@@ -109,3 +114,13 @@ def calculate_loss(observed, simulated):
     total_error = combined_results['Errors'].sum()
 
     return total_error
+
+def fit_power_law(data, xmin):
+    fit = powerlaw.Fit(data, xmin=xmin, discrete=True)
+    return fit.alpha
+
+def fit_beta_distribution(data):
+    data = data[data > 0]  # Filter out zero or negative values
+    a, b, loc, scale = beta.fit(data  )# ,floc=0, fscale=1)
+    return {'a': a, 'b': b, 'loc': loc, 'scale': scale}
+
