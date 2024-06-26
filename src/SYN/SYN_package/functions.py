@@ -31,10 +31,12 @@ def simulate_number_of_comments(alpha, lambda_,):
     
 
 
-def simulate_data(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=100, activate_tqdm=True,min_users=50):
+def simulate_data(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=False, activate_tqdm=True,min_users=50):
     data = []
-    thread_ids = social['post_id'].unique()[:num_threads]
-    
+    if num_threads!=False:
+        thread_ids = social['post_id'].unique()[:num_threads]
+    else:
+        thread_ids = social['post_id'].unique()
     # Use tqdm conditionally
     if activate_tqdm:
         thread_ids = tqdm(thread_ids)
