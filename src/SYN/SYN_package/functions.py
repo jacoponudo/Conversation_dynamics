@@ -12,7 +12,7 @@ import powerlaw
 
 
 def simulate_number_of_users(gamma_fb, min_users, size=1):
-    return (xmin * (1 - np.random.rand(size))**(-1 / (alpha - 1)))
+    return (min_users * (1 - np.random.rand(size))**(-1 / (gamma_fb - 1)))
 
 def simulate_inital_comment(a, b,loc,scale, size=1):
     return  beta.rvs(a, b, loc, scale, size)
