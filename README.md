@@ -25,3 +25,5 @@ The scructure of the code consist in:
 
 Focus on : 
 Attention of user with respect to a chat. 
+
+Move on: probabily there is a way to define the density of a conversation among users, each platform will present a different distribution of it, and on each platform we will be able to identify how it's connected with the tocixity
