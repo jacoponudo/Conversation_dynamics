@@ -29,7 +29,7 @@ def simulate_number_of_comments(alpha, lambda_,):
     simulated_data = inflate * (counts)
     return simulated_data
     
-
+import random
 
 def simulate_data(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=False, activate_tqdm=True,min_users=50):
     data = []
