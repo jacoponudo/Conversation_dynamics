@@ -34,7 +34,8 @@ def simulate_number_of_comments(alpha, lambda_,):
 def simulate_data(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=False, activate_tqdm=True,min_users=50):
     data = []
     if num_threads!=False:
-        thread_ids = social['post_id'].unique()[:num_threads]
+        num_threads = min(num_threads, len(social['post_id'].unique()))
+        thread_ids = random.sample(list(social['post_id'].unique()), num_threads)
     else:
         thread_ids = social['post_id'].unique()
     # Use tqdm conditionally
