@@ -125,4 +125,3 @@ def process_social_platform(names, datas):
     return params_dict
 
 
-final_comment_additional_timings=burr.rvs(cf, df, lf, sf, size=1)
