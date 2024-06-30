@@ -28,7 +28,8 @@ def simulate_number_of_comments(alpha, lambda_,size=1):
     # Combina le componenti inflazionate e di conteggio
     simulated_data = inflate * (counts)
     return simulated_data
-    
+
+
 import random
 
 def simulate_data(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=False, activate_tqdm=True,min_users=50):
@@ -133,6 +134,7 @@ import math
 
 
 
+
 def positioning_replies(data,c, d, l, s,K):
     # Trova tutte le liste con nan e l'ultimo valore non-nan
     candidates = []
@@ -166,15 +168,13 @@ def positioning_replies(data,c, d, l, s,K):
         if math.isnan(target_list[i]):
             iat=(burr.rvs(c, d, l, s, size=1))
             if (new_value-target_list[i-1])<iat:
-                target_list[i] =iat
+                target_list[i] =iat[0]
             else:
                 target_list[i]=new_value
             break  # Sostituisci solo il primo nan trovato
 
     # Chiamata ricorsiva per continuare a sostituire eventuali altri nan
-    return replace_nans(data)
-
-
+    return positioning_replies(data,c, d, l, s,K)
 
 
 def simulate_data_M2(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df, lf, sf, num_threads=False, activate_tqdm=True,min_users=50):
@@ -192,22 +192,20 @@ def simulate_data_M2(social,gamma, a, b,loc,scale, alpha, lambda_,c,d,l,s,cf, df
         thread = social[social['post_id'] == th]
         number_of_users = int(np.round(simulate_number_of_users(gamma, min_users, size=1)))
         T0s = simulate_inital_comment( a, b,loc,scale, size=number_of_users)
-        Ns = int(simulate_number_of_comments(alpha, lambda_) + 1,number_of_users)
+        Ns = (simulate_number_of_comments(alpha, lambda_,number_of_users) )+1
         thread = [[T0s[i]] + [np.nan] * (Ns[i] - 1) for i in range(number_of_users)]
-        K=0.05*sum(Ns)
+        K=(0.05*sum(Ns)).astype(int)
         thread = positioning_replies(thread,c, d, l, s,K)
         for u,interaction in enumerate(thread):
-            timing = interaction.tolist()
-            timing = np.cumsum(timing)
-            timing = [x for x in timing if x <= 1]
-            for j,t in enumerate(timing):
-                data.append({'user_id': f'User_{u}', 'post_id': th, 'temporal_distance_birth_base_100h': t,'sequential_number_of_comment_by_user_in_thread': j+1})
+          timing = np.cumsum(np.array(interaction, dtype=float))
+          timing = [x for x in timing if x <= 1]
+          for j,t in enumerate(timing):
+              data.append({'user_id': f'User_{u}', 'post_id': th, 'temporal_distance_birth_base_100h': t,'sequential_number_of_comment_by_user_in_thread': j+1})
 
     simulated = pd.DataFrame(data)
     observed = social[social['post_id'].isin(simulated['post_id'].unique())][['user_id', 'post_id', 'temporal_distance_birth_base_100h','sequential_number_of_comment_by_user_in_thread']]
 
     return simulated, observed
-
 
 
 
