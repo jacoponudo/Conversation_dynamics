@@ -123,3 +123,6 @@ def process_social_platform(names, datas):
         params_dict[social]['cf'], params_dict[social]['df'], params_dict[social]['lf'], params_dict[social]['sf'] = burr.fit(data)
 
     return params_dict
+
+
+final_comment_additional_timings=burr.rvs(cf, df, lf, sf, size=1)
