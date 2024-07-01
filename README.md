@@ -24,6 +24,8 @@ SYN_mainclass.ipynb
 - Paramters estimation
 - Production of synthetic data
 - Comparison of observed and simulated data
+  
   +
+  
 SYN_interpretation.ipynb
 -intrpretate parameters for each platform 
