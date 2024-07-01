@@ -19,6 +19,11 @@ In order to plot most of the graphs related to the explotatory data analysis the
 In order to estimate sets of paramters for each platform, replicate synthetic data and compare those with real data there is the directory SYN.
 
 Specifically in SYN there will  be: 
+
+SYN_mainclass.ipynb
 - Paramters estimation
 - Production of synthetic data
 - Comparison of observed and simulated data
+  +
+SYN_interpretation.ipynb
+-intrpretate parameters for each platform 
