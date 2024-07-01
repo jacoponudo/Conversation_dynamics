@@ -2,28 +2,23 @@
 In this repository you will find all the material concerning theresearch for my  master thesis.
 In the field of computational social sciences, this analysis is about conversation's dynamics and human behavior in digital environments.
  
-The main finding from the data analysis are:
-- dilatation of IAT is present by the final stages of the interaction, and are more frequent if the activity around is terminated[1]. 
-- the toxicity's temperature of a thread, in the temporal window before a commment is conditioning the comment toxiciy[2].
-- during a conversation the burst of activity can cause an increase of toxicity[3].
- 
+Starting from some signals that caracterize the plattform related macro dynamics of conversation, I've tried to replicate synthetically data  from each platform to fit these signals, and then be able to interpret the different combinations of parameters used.
 
-The scructure of the code consist in: 
-- PRO: to extract new features from the dataset, and perform processing  of the row parquet file.  
-- EDA: to do an exploratory data analysis of the dataset. 
-- HWK: to fit an Hawkes process of point to the time series of comments for each user.
-- TRA: to evaluate how toxicity is reverbering and affecting the comment's toxicity production.
-- BUR: to analyze if there are some burst among conversation, or among user activity.
+As  signals I've identified the tendency of the conversation of been composed by less first comments with time; and also the tendency of the conversation of be consumed more repidly on some platforms than on some others. 
 
+The first model to replicate  synthetically the data is composed by: 
+- sample of number of users from a scale free (plaftorm specific)
+- sample the moment of entrance in a conversation of a use, using a beta (plaform specific)
+- sample from the mixture of an exponenital zero inflated the number of comment that a user will do (plaform specific)
+- dispose these comments in the time using the IAT suggested by specific borr distribution (plaform specific)
 
-[1] An interaction is defined as the comments posted by a uset under a specific thread. To mesure the activity I've used a 1h window. This will be analyzed in HWK.
-[2] To be decided how long the window should be, and how to quantify the propagation. Is the toxicity influencing in the same way even if the number of producers is more concentrated. This is in TRA.
-[3] This is from Persistent Paper, will be in BUR folder.
+Then compute the differences and quantify the loss to evalutate the fitting, and finally give a logical interpretetion to the  best set of parameters.
 
+In order to go from eaw data to processed, there is the directory PRO, and using PRO_mainclass.ipynb is possible to perform the preproceesing.
+In order to plot most of the graphs related to the explotatory data analysis there is the directory EDA.
+In order to estimate sets of paramters for each platform, replicate synthetic data and compare those with real data there is the directory SYN.
 
-
-
-Focus on : 
-Attention of user with respect to a chat. 
-
-Move on: probabily there is a way to define the density of a conversation among users, each platform will present a different distribution of it, and on each platform we will be able to identify how it's connected with the tocixity
+Specifically in SYN there will  be: 
+- Paramters estimation
+- Production of synthetic data
+- Comparison of observed and simulated data
