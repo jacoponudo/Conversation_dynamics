@@ -17,13 +17,14 @@ def estimate_parameters_U(fb,xmin_fb=50):
 def fit_power_law(data, xmin):
     fit = powerlaw.Fit(data, xmin=xmin, discrete=True)
     return fit.alpha
+
 def fit_beta_distribution(data):
     data = data[data > 0]
     warnings.filterwarnings('ignore', category=RuntimeWarning, message='The iteration is not making good progress')
     warnings.filterwarnings('ignore', category=RuntimeWarning, message='invalid value encountered in sqrt')
-
     a, b, loc, scale = beta.fit(data)
     return {'a': a, 'b': b, 'loc': loc, 'scale': scale}
+
 def simulate_number_of_comments(alpha, lambda_,):
     # Simula la componente inflazionata (produce 0 con probabilità alpha)
     inflate = np.random.binomial(1, alpha, 1)
@@ -32,9 +33,9 @@ def simulate_number_of_comments(alpha, lambda_,):
     # Discretizza i valori esponenziali per ottenere valori di conteggio interi
     counts = np.round(counts).astype(int)
     counts[counts<0]=0
-    # Combina le componenti inflazionate e di conteggio
     simulated_data = inflate * (counts)
     return simulated_data
+
 def simulate_zip(alpha, lambda_, size=10000):
     # Simula la componente inflazionata (produce 0 con probabilità alpha)
     inflate = np.random.binomial(1, alpha, size)
@@ -152,7 +153,7 @@ def estimate_stimulus_reply(social):
     df['distanza_tra_commenti_relativa'] = df['indice_commento'] / df['number_of_comments']
 
     # Filter for specific values
-    df_filtered = df[(df['sequential_number_of_comment_by_user_in_thread'] == 3) & 
+    df_filtered = df[(df['sequential_number_of_comment_by_user_in_thread'] >1) & 
                      (df['number_of_comments_by_user_in_thread'] != df['sequential_number_of_comment_by_user_in_thread'])]
 
     # Extract the filtered data
@@ -165,3 +166,13 @@ def estimate_stimulus_reply(social):
     a, b, loc, scale = beta.fit(data_to_fit)
 
     return a, b, loc, scale
+
+def filter_first_h(df,h=100):
+    # Filter the DataFrame
+    df = df[df['temporal_distance_birth_h'] < h].copy()
+    
+    # Create new columns
+    df['temporal_distance_birth_base_100h'] = df['temporal_distance_birth_h'] / h
+    df['IAT_base_100h'] = df['IAT_user_thread'] / (60 * 60 * h)
+    
+    return df

@@ -153,6 +153,10 @@ def simulate_data_M2(social, gamma, a, b, loc, scale, alpha, lambda_, c, d, l, s
     return simulated, observed
 
 def positioning_replies(data, c, d, l, s, Ns, a, b, loc, scale):
+    first_comments = sorted([x for sublist in data for x in sublist])
+    print(first_comments)
+    was_nan = []
+
     while True:
         candidates = []
         has_nan = False
@@ -174,23 +178,36 @@ def positioning_replies(data, c, d, l, s, Ns, a, b, loc, scale):
         target_list = candidates[0][1]
         all_values = sorted([x for sublist in data for x in sublist if not math.isnan(x)])
         index = all_values.index(most_recent_non_nan)
+
         k = beta.rvs(a, b, loc, scale, 1)[0]
         K = (k * sum(Ns)).astype(int)
-        
-        if index + K < len(all_values):
-            new_value = all_values[index + K]
+
+        # Adjust K if it encounters a value that was originally NA
+        adjusted_index = index
+        for _ in range(K):
+            adjusted_index += 1
+            if adjusted_index < len(all_values) and all_values[adjusted_index] in was_nan:
+                adjusted_index += 1
+
+        if adjusted_index < len(all_values):
+            new_value = all_values[adjusted_index]
         else:
             new_value = all_values[-1]
-        
+
         for i in range(len(target_list)):
             if math.isnan(target_list[i]):
                 iat = burr.rvs(c, d, l, s, size=1)
-                if (new_value - sum(target_list[:i - 1])) < iat:
+                if (new_value - sum(target_list[:i])) < 0.5*iat:
                     target_list[i] = iat[0]
-                elif (new_value - sum(target_list[:i - 1])) > 3 * iat:
+                elif (new_value - sum(target_list[:i])) > 10 * iat:
                     target_list[i] = iat[0]
                 else:
                     target_list[i] = new_value
+                was_nan.append(target_list[i])
                 break
 
     return data
+
+
+
+
