@@ -29,7 +29,7 @@ def simulate_number_of_comments(alpha, lambda_, size=1):
     simulated_data = inflate * counts
     return simulated_data
 
-def simulate_data(social, parameters num_threads=False, activate_tqdm=True, min_users=50):
+def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min_users=50):
     gamma=parameters['gamma']
     a=parameters['a']
     b=parameters['b']
