@@ -192,8 +192,6 @@ def simulate_data_M2(social, parameters, num_threads=False, activate_tqdm=True, 
     return simulated, observed
 
 def positioning_replies(data, c, d, l, s, Ns, a, b, loc, scale):
-    first_comments = sorted([x for sublist in data for x in sublist])
-    print(first_comments)
     was_nan = []
 
     while True:
