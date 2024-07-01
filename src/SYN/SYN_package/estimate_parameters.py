@@ -123,7 +123,7 @@ def process_social_platform(names, datas):
         params_dict[social]['cf'], params_dict[social]['df'], params_dict[social]['lf'], params_dict[social]['sf'] = burr.fit(data)
         
         # Fit Beta for stimulus
-        params_dict[social]['ka'], params_dict[social]['kb'], params_dict[social]['kloc'], params_dict[social]['kscale']=estimate_stimulus_reply(social)
+        params_dict[social]['ka'], params_dict[social]['kb'], params_dict[social]['kloc'], params_dict[social]['kscale']=estimate_stimulus_reply(data)
 
     return params_dict
 
