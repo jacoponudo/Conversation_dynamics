@@ -121,7 +121,47 @@ def process_social_platform(names, datas):
         data = IAT_f['time_difference']
         data = data[data > 0]
         params_dict[social]['cf'], params_dict[social]['df'], params_dict[social]['lf'], params_dict[social]['sf'] = burr.fit(data)
+        
+        # Fit Beta for stimulus
+        params_dict[social]['ka'], params_dict[social]['kb'], params_dict[social]['kloc'], params_dict[social]['kscale']=estimate_stimulus_reply(social)
 
     return params_dict
 
 
+
+
+
+def estimate_stimulus_reply(social):
+    # Convert 'created_at' to datetime
+    social['created_at'] = pd.to_datetime(social['created_at'])
+
+    # Sort the data by 'post_id' and 'created_at'
+    social = social.sort_values(by=['post_id', 'created_at'])
+
+    # Assign a sequential index to each comment within each 'post_id' group
+    social['indice_commento'] = social.groupby('post_id').cumcount()
+
+    # Select columns of interest
+    df = social[['indice_commento', 'user_id', 'post_id', 
+                 'sequential_number_of_comment_by_user_in_thread', 
+                 'number_of_comments_by_user_in_thread', 
+                 'number_of_comments']].copy()
+
+    # Calculate the distance between comments
+    df['distanza_tra_commenti'] = df.groupby(['user_id', 'post_id'])['indice_commento'].diff()
+    df['distanza_tra_commenti_relativa'] = df['indice_commento'] / df['number_of_comments']
+
+    # Filter for specific values
+    df_filtered = df[(df['sequential_number_of_comment_by_user_in_thread'] == 3) & 
+                     (df['number_of_comments_by_user_in_thread'] != df['sequential_number_of_comment_by_user_in_thread'])]
+
+    # Extract the filtered data
+    data_to_fit = df_filtered['distanza_tra_commenti_relativa']
+
+    # Check for finite values
+    data_to_fit = data_to_fit[np.isfinite(data_to_fit)]
+
+    # Fit the Beta distribution to the data
+    a, b, loc, scale = beta.fit(data_to_fit)
+
+    return a, b, loc, scale
