@@ -66,7 +66,7 @@ def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min
 
         for i in range(number_of_users):
             T0 = T0s[i]
-            N = int(simulate_number_of_comments(alpha, lambda_) + 1)
+            N = int(simulate_number_of_comments(alpha, lambda_)[0] + 1)
             if N > 1:
                 additional_timings = burr.rvs(c, d, l, s, size=N-2)
                 final_comment_additional_timings = burr.rvs(cf, df, lf, sf, size=1)
