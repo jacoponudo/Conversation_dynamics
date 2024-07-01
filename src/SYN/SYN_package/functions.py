@@ -29,7 +29,26 @@ def simulate_number_of_comments(alpha, lambda_, size=1):
     simulated_data = inflate * counts
     return simulated_data
 
-def simulate_data(social, gamma, a, b, loc, scale, alpha, lambda_, c, d, l, s, cf, df, lf, sf, num_threads=False, activate_tqdm=True, min_users=50):
+def simulate_data(social, parameters num_threads=False, activate_tqdm=True, min_users=50):
+    gamma=parameters['gamma']
+    a=parameters['a']
+    b=parameters['b']
+    loc=parameters['loc']
+    scale=parameters['scale']
+    alpha=parameters['alpha']
+    lambda_=parameters['lambda']
+    c=parameters['c']
+    d=parameters['d']
+    l=parameters['l']
+    s=parameters['s']
+    cf=parameters['cf']
+    df=parameters['df']
+    lf=parameters['lf']
+    sf=parameters['sf']
+    ka=parameters['ka']
+    kb=parameters['kb']
+    kloc=parameters['kloc']
+    kscale=parameters['kscale']
     data = []
     if num_threads:
         num_threads = min(num_threads, len(social['post_id'].unique()))
@@ -122,7 +141,27 @@ def fit_beta_distribution(data):
     a, b, loc, scale = beta.fit(data)  # , floc=0, fscale=1)
     return {'a': a, 'b': b, 'loc': loc, 'scale': scale}
 
-def simulate_data_M2(social, gamma, a, b, loc, scale, alpha, lambda_, c, d, l, s, cf, df, lf, sf, ka, kb, kloc, kscale, num_threads=False, activate_tqdm=True, min_users=50):
+def simulate_data_M2(social, parameters, num_threads=False, activate_tqdm=True, min_users=50):
+    gamma=parameters['gamma']
+    a=parameters['a']
+    b=parameters['b']
+    loc=parameters['loc']
+    scale=parameters['scale']
+    alpha=parameters['alpha']
+    lambda_=parameters['lambda']
+    c=parameters['c']
+    d=parameters['d']
+    l=parameters['l']
+    s=parameters['s']
+    cf=parameters['cf']
+    df=parameters['df']
+    lf=parameters['lf']
+    sf=parameters['sf']
+    ka=parameters['ka']
+    kb=parameters['kb']
+    kloc=parameters['kloc']
+    kscale=parameters['kscale']
+    
     data = []
     if num_threads:
         num_threads = min(num_threads, len(social['post_id'].unique()))
