@@ -174,7 +174,7 @@ def simulate_data_M2(social, parameters, num_threads=False, activate_tqdm=True, 
 
     for th in thread_ids:
         thread = social[social['post_id'] == th]
-        number_of_users = int(np.round(simulate_number_of_users(gamma, min_users, size=1)))
+        number_of_users = int(np.round(simulate_number_of_users(gamma, min_users, size=1)[0]))
         T0s = simulate_initial_comment(a, b, loc, scale, size=number_of_users)
         Ns = simulate_number_of_comments(alpha, lambda_, number_of_users) + 1
         thread = [[T0s[i]] + [np.nan] * (Ns[i] - 1) for i in range(number_of_users)]
