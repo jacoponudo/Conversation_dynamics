@@ -176,8 +176,12 @@ print(media)
 # Creazione di una lista di dizionari con valore e ID della lista
 data = []
 for i, sublist in enumerate(thread):
-    for value in sublist:
-        data.append({'value': value, 'list_id': i})
+    for j, value in enumerate(sublist):
+        data.append({
+            'value': value, 
+            'list_id': i,
+            'first_comment': j == 0
+        })
 
 # Creazione del DataFrame
 df = pd.DataFrame(data)
@@ -190,7 +194,7 @@ df_sorted = df.sort_values(by='value').reset_index(drop=True)
 subdatasets = np.array_split(df_sorted, 20)
 
 # Conta dei valori unici di 'list_id' in ogni subdataset
-list_id_counts = [len(subset['list_id'].unique()) for subset in subdatasets]
+list_id_counts = [np.mean(subset['first_comment']) for subset in subdatasets]
 
 print(list_id_counts)
 
