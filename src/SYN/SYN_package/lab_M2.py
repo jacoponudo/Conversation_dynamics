@@ -105,7 +105,7 @@ b=parameters['b']
 loc=parameters['loc']
 scale=parameters['scale']
 alpha=parameters['alpha']
-
+min_users=50
 
 # Functions
 import random
@@ -138,10 +138,11 @@ while any(np.isnan(value) for sublist in thread for value in sublist):
             alpha=random.random()
             if alpha>0.9:
                 last_comments = [last_value_not_na(lista) for lista in thread]
+                filtered_values = [value for value in last_comments if interaction[j-1] < value <= interaction[j-1] + view]
             else:
                 exclude_first_comment = [sublist for sublist in thread if len(sublist) != 1]
-                last_comments = [last_value_not_na(lista) for lista in thread]
-            filtered_values = [value for value in last_comments if interaction[j-1] < value <= interaction[j-1] + view]
+                last_comments = [last_value_not_na(lista) for lista in exclude_first_comment]
+                filtered_values = [value for value in last_comments if interaction[j-1] < value ]
             if len(filtered_values)!=0:
                 sampled_value = random.choice(filtered_values)
                 if j<(len(interaction)-1):
@@ -172,5 +173,33 @@ print(media)
 
 
 
+# Creazione di una lista di dizionari con valore e ID della lista
+data = []
+for i, sublist in enumerate(thread):
+    for value in sublist:
+        data.append({'value': value, 'list_id': i})
+
+# Creazione del DataFrame
+df = pd.DataFrame(data)
 
 
+# Ordinamento del DataFrame per 'value'
+df_sorted = df.sort_values(by='value').reset_index(drop=True)
+
+# Divisione del DataFrame in 10 subdataset
+subdatasets = np.array_split(df_sorted, 20)
+
+# Conta dei valori unici di 'list_id' in ogni subdataset
+list_id_counts = [len(subset['list_id'].unique()) for subset in subdatasets]
+
+print(list_id_counts)
+
+
+def is_decreasing_trend(counts):
+    diffs = np.diff(counts)
+    return np.mean(diffs <= 0)
+
+# Verifica del trend decrescente
+decreasing_trend = is_decreasing_trend(list_id_counts)
+
+print("Decreasing trend:", decreasing_trend)
