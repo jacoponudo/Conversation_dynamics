@@ -66,7 +66,7 @@ def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min
 
         for i in range(number_of_users):
             T0 = T0s[i]
-            N = int(simulate_number_of_comments(alpha, lambda_)[0] + 1)
+            N = int(simulate_number_of_comments(alpha, lambda_,1)[0] + 1)
             if N > 1:
                 additional_timings = burr.rvs(c, d, l, s, size=N-2)
                 final_comment_additional_timings = burr.rvs(cf, df, lf, sf, size=1)
@@ -199,10 +199,17 @@ def positioning_replies(thread,c, d, l, s,cf, df, lf, sf):
             j=first_nan(interaction)
             if j!=-1:
                 view,lag=burr.rvs(c, d, l, s, size=2)[0:2]
+                view=view*3
                 lag_f=burr.rvs(cf, df, lf, sf, size=1)[0]
                 lag=lag/100
-                last_comments = [last_value_not_na(lista) for lista in thread]
-                filtered_values = [value for value in last_comments if interaction[j-1] < value <= interaction[j-1] + view]
+                alpha=random.random()
+                if alpha>0.9:
+                    last_comments = [last_value_not_na(lista) for lista in thread]
+                    filtered_values = [value for value in last_comments if interaction[j-1] < value <= interaction[j-1] + view]
+                else:
+                    exclude_first_comment = [sublist for sublist in thread if len(sublist) != 1]
+                    last_comments = [last_value_not_na(lista) for lista in exclude_first_comment]
+                    filtered_values = [value for value in last_comments if interaction[j-1] < value ]
                 if len(filtered_values)!=0:
                     sampled_value = random.choice(filtered_values)
                     if j<(len(interaction)-1):

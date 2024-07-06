@@ -135,7 +135,12 @@ while any(np.isnan(value) for sublist in thread for value in sublist):
         if j!=-1:
             view,lag=burr.rvs(c, d, l, s, size=2)[0:2]
             lag=lag/100
-            last_comments = [last_value_not_na(lista) for lista in thread]
+            alpha=random.random()
+            if alpha>0.9:
+                last_comments = [last_value_not_na(lista) for lista in thread]
+            else:
+                exclude_first_comment = [sublist for sublist in thread if len(sublist) != 1]
+                last_comments = [last_value_not_na(lista) for lista in thread]
             filtered_values = [value for value in last_comments if interaction[j-1] < value <= interaction[j-1] + view]
             if len(filtered_values)!=0:
                 sampled_value = random.choice(filtered_values)
@@ -143,7 +148,7 @@ while any(np.isnan(value) for sublist in thread for value in sublist):
                     thread[i][j]=float(sampled_value+lag )
                 else:
                     thread[i][j]=float(sampled_value+ lag)
-
+    
             else: 
                 if j<(len(interaction)-1):
                     thread[i][j]=float(interaction[j-1]+ lag)
