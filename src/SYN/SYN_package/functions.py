@@ -180,7 +180,7 @@ def simulate_data_M2(social, parameters, num_threads=False, activate_tqdm=True, 
         T0s = simulate_initial_comment(a, b, loc, scale, size=number_of_users)
         Ns = simulate_number_of_comments(alpha, lambda_, number_of_users) + 1
         thread = [[T0s[i]] + [np.nan] * (Ns[i] - 1) for i in range(number_of_users)]
-        thread = positioning_replies(thread, c, d, l, s, Ns, ka, kb, kloc, kscale)
+        thread = positioning_replies(thread,c, d, l, s,cf, df, lf, sf)
         
         for u, interaction in enumerate(thread):
             timing = np.cumsum(np.array(interaction, dtype=float))
