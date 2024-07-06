@@ -132,9 +132,11 @@ def calculate_loss(observed, simulated):
 
     return total_error
 
+
 def fit_power_law(data, xmin):
     fit = powerlaw.Fit(data, xmin=xmin, discrete=True)
     return fit.alpha
+
 
 def fit_beta_distribution(data):
     data = data[data > 0]  # Filter out zero or negative values
@@ -191,60 +193,119 @@ def simulate_data_M2(social, parameters, num_threads=False, activate_tqdm=True, 
 
     return simulated, observed
 
-def positioning_replies(data, c, d, l, s, Ns, a, b, loc, scale):
-    was_nan = []
-
-    while True:
-        candidates = []
-        has_nan = False
-
-        # Find all lists with nan and the last non-nan value
-        for sublist in data:
-            if math.isnan(sublist[-1]):
-                non_nan_values = [x for x in sublist if not math.isnan(x)]
-                if non_nan_values:
-                    candidates.append((non_nan_values[-1], sublist))
-                    has_nan = True
-
-        # If there are no more candidates with nan, exit the loop
-        if not has_nan:
-            break
-
-        candidates.sort(key=lambda x: x[0])
-        most_recent_non_nan = candidates[0][0]
-        target_list = candidates[0][1]
-        all_values = sorted([x for sublist in data for x in sublist if not math.isnan(x)])
-        index = all_values.index(most_recent_non_nan)
-
-        k = beta.rvs(a, b, loc, scale, 1)[0]
-        K = (k * sum(Ns)).astype(int)
-
-        # Adjust K if it encounters a value that was originally NA
-        adjusted_index = index
-        for _ in range(K):
-            adjusted_index += 1
-            if adjusted_index < len(all_values) and all_values[adjusted_index] in was_nan:
-                adjusted_index += 1
-
-        if adjusted_index < len(all_values):
-            new_value = all_values[adjusted_index]
-        else:
-            new_value = all_values[-1]
-
-        for i in range(len(target_list)):
-            if math.isnan(target_list[i]):
-                iat = burr.rvs(c, d, l, s, size=1)
-                if (new_value - sum(target_list[:i])) < 0.5*iat:
-                    target_list[i] = iat[0]
-                elif (new_value - sum(target_list[:i])) > 10 * iat:
-                    target_list[i] = iat[0]
-                else:
-                    target_list[i] = new_value
-                was_nan.append(target_list[i])
-                break
-
-    return data
+def positioning_replies(thread,c, d, l, s,cf, df, lf, sf):
+    while any(np.isnan(value) for sublist in thread for value in sublist):
+        for i,interaction in enumerate(thread):
+            j=first_nan(interaction)
+            if j!=-1:
+                view,lag=burr.rvs(c, d, l, s, size=2)[0:2]
+                lag_f=burr.rvs(cf, df, lf, sf, size=1)[0]
+                lag=lag/100
+                last_comments = [last_value_not_na(lista) for lista in thread]
+                filtered_values = [value for value in last_comments if interaction[j-1] < value <= interaction[j-1] + view]
+                if len(filtered_values)!=0:
+                    sampled_value = random.choice(filtered_values)
+                    if j<(len(interaction)-1):
+                        thread[i][j]=float(sampled_value+lag )
+                    else:
+                        thread[i][j]=float(sampled_value+ lag_f)
+    
+                else: 
+                    if j<(len(interaction)-1):
+                        thread[i][j]=float(interaction[j-1]+ lag)
+                    else:
+                        thread[i][j]=float(interaction[j-1]+ lag_f)
+            
+    thread = [[min(1, value) for value in sublist] for sublist in thread]
+    return thread
 
 
+def generate_power_law_samples(gamma, lower_bound, sample_size):
+    """
+    Generate samples from a power-law distribution.
 
+    Parameters:
+    gamma (float): The scaling exponent of the power-law distribution.
+    lower_bound (float): The lower bound of the distribution.
+    sample_size (int): The number of samples to generate.
+
+    Returns:
+    np.ndarray: Array of generated samples.
+    """
+    # The shape parameter 'a' for scipy's powerlaw distribution
+    a = gamma - 1
+
+    # Generate uniform random samples in the range (0, 1)
+    uniform_samples = np.random.uniform(0, 1, sample_size)
+
+    # Use the inverse transform sampling method to generate power-law samples
+    power_law_samples = lower_bound * (1 - uniform_samples) ** (-1 / a)
+
+    return power_law_samples
+
+# Funzione per creare istogrammi di confronto
+def plot_histogram_comparison(original, sampled, platform_name, bins):
+    plt.figure(figsize=(12, 8))
+    sns.histplot(original, kde=True, color='blue', label='Original', bins=bins, stat='density', alpha=0.6)
+    sns.histplot(sampled, kde=True, color='red', label='Sampled', bins=bins, stat='density', alpha=0.6)
+    plt.title(f'Histogram Comparison for {platform_name}')
+    plt.xlabel('Number of Unique Users')
+    plt.ylabel('Density')
+    plt.legend()
+    plt.xlim(0,max(bins))
+    plt.show()
+
+# Funzione per calcolare la perdita come somma delle differenze di frequenza bin per bin
+def calculate_frequency_difference_loss(original, sampled, bins):
+    # Handling NaN values in original and sampled data
+
+    # Compute histograms
+    sampled_hist, _ = np.histogram(sampled, bins=bins, density=True)
+    original_hist, _ = np.histogram(original, bins=bins, density=True)
+
+    # Calculate loss
+    loss = np.sum(np.abs(original_hist - sampled_hist))
+
+    return loss
+
+def simulate_number_of_comments(alpha, lambda_,size):
+    # Simula la componente inflazionata (produce 0 con probabilità alpha)
+    inflate = np.random.binomial(1, alpha, size)
+    # Simula la componente contatore (distribuzione esponenziale negativa)
+    counts = np.random.exponential(1/lambda_, size)
+    # Discretizza i valori esponenziali per ottenere valori di conteggio interi
+    counts = np.round(counts).astype(int)
+    counts[counts<0]=0
+    # Combina le componenti inflazionate e di conteggio
+    simulated_data = inflate * (counts)
+    return simulated_data
+def simulate_zip(alpha, lambda_, size=10000):
+    # Simula la componente inflazionata (produce 0 con probabilità alpha)
+    inflate = np.random.binomial(1, alpha, size)
+    # Simula la componente contatore (distribuzione esponenziale negativa)
+    counts = np.random.exponential(1/lambda_, size)
+    # Discretizza i valori esponenziali per ottenere valori di conteggio interi
+    counts = np.round(counts).astype(int)
+    counts[counts<0]=0
+    # Combina le componenti inflazionate e di conteggio
+    simulated_data = inflate * counts
+    return simulated_data
+
+# Function to calculate KL-divergence
+def kl_divergence(p, q):
+    epsilon = 1e-10  # Small constant to avoid log(0)
+    return np.sum(p * np.log((p + epsilon) / (q + epsilon)))
+
+
+def last_value_not_na(lista):
+    for valore in reversed(lista):
+        if not math.isnan(valore):
+            return valore
+    return None
+
+def first_nan(lista):
+    for i, valore in enumerate(lista):
+        if math.isnan(valore):
+            return i
+    return -1  # Se non c'è nessun NaN nella lista
 
