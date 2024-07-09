@@ -29,6 +29,15 @@ def simulate_number_of_comments(alpha, lambda_, size=1):
     simulated_data = inflate * counts
     return simulated_data
 
+
+
+def IAT(c, d, l, s,T=1):
+  x = 10
+  while x > T:
+      x = burr.rvs(c, d, l, s, size=1)
+  return x
+
+
 def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min_users=50):
     gamma=parameters['gamma']
     a=parameters['a']
@@ -42,7 +51,7 @@ def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min
     l=parameters['l']
     s=parameters['s']
     cf=parameters['cf']
-    df=parameters['df']
+    d_f=parameters['df']
     lf=parameters['lf']
     sf=parameters['sf']
     ka=parameters['ka']
@@ -61,18 +70,26 @@ def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min
     
     for th in thread_ids:
         thread = social[social['post_id'] == th]
-        number_of_users = int(np.round(simulate_number_of_users(gamma, min_users, size=1)))
+        number_of_users = int(np.round(simulate_number_of_users(gamma, min_users, size=1)[0]))
         T0s = simulate_initial_comment(a, b, loc, scale, size=number_of_users)
 
         for i in range(number_of_users):
-            T0 = T0s[i]
             N = int(simulate_number_of_comments(alpha, lambda_,1)[0] + 1)
+            additional_timings=[]
+            final_comment_additional_timings=[]
+            T=1-T0s[i]
             if N > 1:
-                additional_timings = burr.rvs(c, d, l, s, size=N-2)
-                final_comment_additional_timings = burr.rvs(cf, df, lf, sf, size=1)
-                timing = np.concatenate(([T0], additional_timings, final_comment_additional_timings))
+              for j in range(N-1):
+                if j<(N-2):
+                  lag = IAT(c=c, d=d, l=l, s=s,T=T)[0]
+                  additional_timings.append(lag)
+                  T=1-(T0s[i]+np.sum(additional_timings))
+                else:
+                  lag=IAT(c=cf, d=d_f, l=lf, s=sf,T=T)[0]
+                  final_comment_additional_timings.append(lag)
+              timing = np.concatenate([[T0s[i]], additional_timings, final_comment_additional_timings])
             else:
-                timing = np.array([T0])
+                timing = np.array([T0s[i]])
             timing = np.cumsum(timing)
             timing = [x for x in timing if x <= 1]
 
@@ -198,30 +215,12 @@ def positioning_replies(thread,c, d, l, s,cf, df, lf, sf):
         for i,interaction in enumerate(thread):
             j=first_nan(interaction)
             if j!=-1:
-                view,lag=burr.rvs(c, d, l, s, size=2)[0:2]
-                view=view*3
+                lag=burr.rvs(c, d, l, s, size=1)[0]
                 lag_f=burr.rvs(cf, df, lf, sf, size=1)[0]
-                lag=lag/100
-                alpha=random.random()
-                if alpha>0.9:
-                    last_comments = [last_value_not_na(lista) for lista in thread]
-                    filtered_values = [value for value in last_comments if interaction[j-1] < value <= interaction[j-1] + view]
+                if j<(len(interaction)-1):
+                    thread[i][j]=float( thread[i][j-1]+lag )
                 else:
-                    exclude_first_comment = [sublist for sublist in thread if len(sublist) != 1]
-                    last_comments = [last_value_not_na(lista) for lista in exclude_first_comment]
-                    filtered_values = [value for value in last_comments if interaction[j-1] < value ]
-                if len(filtered_values)!=0:
-                    sampled_value = random.choice(filtered_values)
-                    if j<(len(interaction)-1):
-                        thread[i][j]=float(sampled_value+lag )
-                    else:
-                        thread[i][j]=float(sampled_value+ lag_f)
-    
-                else: 
-                    if j<(len(interaction)-1):
-                        thread[i][j]=float(interaction[j-1]+ lag)
-                    else:
-                        thread[i][j]=float(interaction[j-1]+ lag_f)
+                    thread[i][j]=float( thread[i][j-1]+ lag_f)
             
     thread = [[min(1, value) for value in sublist] for sublist in thread]
     return thread
@@ -286,6 +285,7 @@ def simulate_number_of_comments(alpha, lambda_,size):
     # Combina le componenti inflazionate e di conteggio
     simulated_data = inflate * (counts)
     return simulated_data
+
 def simulate_zip(alpha, lambda_, size=10000):
     # Simula la componente inflazionata (produce 0 con probabilità alpha)
     inflate = np.random.binomial(1, alpha, size)
