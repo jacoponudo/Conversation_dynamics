@@ -86,30 +86,10 @@ def process_social_platform(names, datas):
         params_dict[social]['scale'] = time_params['scale']
 
         # Find best alpha and lambda for Zipf-like distribution
-        size_of_interaction = df.groupby(['user_id', 'post_id'])['comment_id'].count().reset_index()
-        observed_data = size_of_interaction['comment_id'] - 1
-        alpha_range = np.arange(0, 1, 0.05)
-        lambda_range = np.arange(0.1, 2, 0.05)
-        best_alpha = None
-        best_lambda = None
-        best_loss = np.inf
+        alpha,lamda=estimate_alpha_lambda(social)
 
-        for alpha in alpha_range:
-            for lambda_ in lambda_range:
-                simulated_data = simulate_zip(alpha, lambda_, size=len(observed_data))
-                max_value = max(np.max(observed_data), np.max(simulated_data))
-                observed_counts = np.bincount(observed_data, minlength=max_value + 1)
-                simulated_counts = np.bincount(simulated_data, minlength=max_value + 1)
-                observed_distribution = observed_counts / np.sum(observed_counts)
-                simulated_distribution = simulated_counts / np.sum(simulated_counts)
-                loss = kl_divergence(observed_distribution, simulated_distribution)
-                if loss < best_loss:
-                    best_loss = loss
-                    best_alpha = alpha
-                    best_lambda = lambda_
-
-        params_dict[social]['alpha'] = np.round(best_alpha, 3)
-        params_dict[social]['lambda'] = best_lambda
+        params_dict[social]['alpha'] = alpha
+        params_dict[social]['lambda'] = lamda
 
         # Process IAT and IAT_f
         IAT, IAT_f = process_platform(df, social)
@@ -176,3 +156,42 @@ def filter_first_h(df,h=100):
     df['IAT_base_100h'] = df['IAT_user_thread'] / (60 * 60 * h)
     
     return df
+
+
+# Definizione della funzione di distribuzione esponenziale per il fitting
+def exponential_distribution(x, lambda_exp):
+    return expon.pdf(x, scale=1/lambda_exp)
+
+# Funzione per stimare alpha e lambda_sxp
+
+from scipy.optimize import curve_fit
+from scipy.stats import expon
+def estimate_alpha_lambda(social):
+    # Calcolo delle dimensioni delle interazioni
+    interaction_size = social.groupby(['post_id', 'user_id'])['comment_id'].count().reset_index()['comment_id']
+
+    # Calcolo di alpha
+    alpha = np.mean(interaction_size == 1)
+
+    # Preparazione dei dati per il fitting dell'esponenziale
+    data = interaction_size[interaction_size > 1] - 2
+
+    # Numero di campioni da generare
+    n = 1000
+    initial_lambda = 0.5  # Modifica questo valore se hai una stima migliore
+
+    # Fitting della distribuzione esponenziale ai dati
+    popt, pcov = curve_fit(exponential_distribution, data, np.zeros_like(data) + 1, p0=[initial_lambda])
+
+    # Parametro ottimizzato per lambda
+    lambda_exp = popt[0]
+
+    # Generazione dei campioni
+    uniform_samples = np.random.uniform(size=n)
+    samples = np.where(uniform_samples < alpha, 1, np.round(expon.rvs(scale=1/lambda_exp, size=n) + 2))
+
+    return alpha, lambda_exp
+     
+
+
+

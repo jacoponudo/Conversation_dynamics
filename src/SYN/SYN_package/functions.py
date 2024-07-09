@@ -20,14 +20,16 @@ def simulate_initial_comment(a, b, loc, scale, size=1):
 def simulate_number_of_comments(alpha, lambda_, size=1):
     # Simulate the inflated component (produces 0 with probability alpha)
     inflate = np.random.binomial(1, alpha, size)
+    
     # Simulate the count component (negative exponential distribution)
-    counts = np.random.exponential(1 / lambda_, size)
-    # Discretize the exponential values to obtain integer count values
+    counts = np.random.exponential(1 / lambda_, size) + 1
     counts = np.round(counts).astype(int)
     counts[counts < 0] = 0
-    # Combine the inflated and count components
-    simulated_data = inflate * counts
-    return simulated_data
+    
+    # Apply alpha probability to zero out counts where inflate is 1
+    counts = counts * (1 - inflate)
+    
+    return counts
 
 
 
@@ -72,9 +74,10 @@ def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min
         thread = social[social['post_id'] == th]
         number_of_users = int(np.round(simulate_number_of_users(gamma, min_users, size=1)[0]))
         T0s = simulate_initial_comment(a, b, loc, scale, size=number_of_users)
+        Ns=simulate_number_of_comments(alpha, lambda_,number_of_users)
 
         for i in range(number_of_users):
-            N = int(simulate_number_of_comments(alpha, lambda_,1)[0] + 1)
+            N = int( Ns[i]+ 1)
             additional_timings=[]
             final_comment_additional_timings=[]
             T=1-T0s[i]
