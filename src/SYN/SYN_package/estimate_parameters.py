@@ -86,7 +86,7 @@ def process_social_platform(names, datas):
         params_dict[social]['scale'] = time_params['scale']
 
         # Find best alpha and lambda for Zipf-like distribution
-        alpha,lamda=estimate_alpha_lambda(social)
+        alpha,lamda=estimate_alpha_lambda(df)
 
         params_dict[social]['alpha'] = alpha
         params_dict[social]['lambda'] = lamda
