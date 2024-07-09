@@ -91,7 +91,7 @@ def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min
             else:
                 timing = np.array([T0s[i]])
             timing = np.cumsum(timing)
-            timing = [x for x in timing if x <= 1]
+            timing = [1 if x > 1 else x for x in timing]
 
             for j, t in enumerate(timing):
                 data.append({'user_id': f'User_{i}', 'post_id': th, 'temporal_distance_birth_base_100h': t, 'sequential_number_of_comment_by_user_in_thread': j + 1})
