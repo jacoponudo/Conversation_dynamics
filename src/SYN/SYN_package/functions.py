@@ -48,18 +48,10 @@ def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min
     scale=parameters['scale']
     alpha=parameters['alpha']
     lambda_=parameters['lambda']
-    c=parameters['c']
-    d=parameters['d']
-    l=parameters['l']
-    s=parameters['s']
-    cf=parameters['cf']
-    d_f=parameters['df']
-    lf=parameters['lf']
-    sf=parameters['sf']
-    ka=parameters['ka']
-    kb=parameters['kb']
-    kloc=parameters['kloc']
-    kscale=parameters['kscale']
+    a_IAT=parameters['a_IAT']
+    b_IAT=parameters['b_IAT']
+    af_IAT=parameters['af_IAT']
+    bf_IAT=parameters['bf_IAT']
     data = []
     if num_threads:
         num_threads = min(num_threads, len(social['post_id'].unique()))
@@ -84,11 +76,11 @@ def simulate_data(social, parameters, num_threads=False, activate_tqdm=True, min
             if N > 1:
               for j in range(N-1):
                 if j<(N-2):
-                  lag = IAT(c=c, d=d, l=l, s=s,T=T)[0]
+                  lag = (np.random.beta(a_IAT, b_IAT,1 )[0])*T
                   additional_timings.append(lag)
                   T=1-(T0s[i]+np.sum(additional_timings))
                 else:
-                  lag=IAT(c=cf, d=d_f, l=lf, s=sf,T=T)[0]
+                  lag=(np.random.beta(af_IAT, bf_IAT,1 )[0])*T
                   final_comment_additional_timings.append(lag)
               timing = np.concatenate([[T0s[i]], additional_timings, final_comment_additional_timings])
             else:

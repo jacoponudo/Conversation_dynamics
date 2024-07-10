@@ -94,18 +94,33 @@ def process_social_platform(names, datas):
         # Process IAT and IAT_f
         IAT, IAT_f = process_platform(df, social)
 
-        # Fit Burr distribution parameters
-        data = IAT['time_difference']
-        data = data[data > 0]
-        params_dict[social]['c'], params_dict[social]['d'], params_dict[social]['l'], params_dict[social]['s'] = burr.fit(data)
-
-        data = IAT_f['time_difference']
-        data = data[data > 0]
-        params_dict[social]['cf'], params_dict[social]['df'], params_dict[social]['lf'], params_dict[social]['sf'] = burr.fit(data)
+        # Fit Beta distribution parameters
+        data = IAT[['time_difference','temporal_distance_birth_base_100h']].copy()
+        data['T']=1-(data['temporal_distance_birth_base_100h']-data['time_difference'])
         
-        # Fit Beta for stimulus
-        params_dict[social]['ka'], params_dict[social]['kb'], params_dict[social]['kloc'], params_dict[social]['kscale']=estimate_stimulus_reply(df)
-
+        data = data[data['time_difference'] > 0]
+        
+        data['time']=data['time_difference']/data['T']
+        
+        mean = np.mean(data['time'])
+        var = np.var(data['time'], ddof=1) 
+        
+        params_dict[social]['a_IAT'] = mean * ((mean * (1 - mean) / var) - 1)
+        params_dict[social]['b_IAT'] = (1 - mean) * ((mean * (1 - mean) / var) - 1)
+        
+        # Fit Beta distribution parameters, for the final comment
+        data = IAT_f[['time_difference','temporal_distance_birth_base_100h']].copy()
+        data['T']=1-(data['temporal_distance_birth_base_100h']-data['time_difference'])
+        
+        data = data[data['time_difference'] > 0]
+        
+        data['time']=data['time_difference']/data['T']
+        
+        mean = np.mean(data['time'])
+        var = np.var(data['time'], ddof=1) 
+        
+        params_dict[social]['af_IAT'] = mean * ((mean * (1 - mean) / var) - 1)
+        params_dict[social]['bf_IAT'] = (1 - mean) * ((mean * (1 - mean) / var) - 1)
     return params_dict
 
 
