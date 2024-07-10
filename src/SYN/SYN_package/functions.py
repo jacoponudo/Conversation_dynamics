@@ -269,17 +269,6 @@ def calculate_frequency_difference_loss(original, sampled, bins):
 
     return loss
 
-def simulate_number_of_comments(alpha, lambda_,size):
-    # Simula la componente inflazionata (produce 0 con probabilità alpha)
-    inflate = np.random.binomial(1, alpha, size)
-    # Simula la componente contatore (distribuzione esponenziale negativa)
-    counts = np.random.exponential(1/lambda_, size)
-    # Discretizza i valori esponenziali per ottenere valori di conteggio interi
-    counts = np.round(counts).astype(int)
-    counts[counts<0]=0
-    # Combina le componenti inflazionate e di conteggio
-    simulated_data = inflate * (counts)
-    return simulated_data
 
 def simulate_zip(alpha, lambda_, size=10000):
     # Simula la componente inflazionata (produce 0 con probabilità alpha)
