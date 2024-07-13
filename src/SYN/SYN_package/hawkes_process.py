@@ -83,7 +83,7 @@ def divide_in_gruppi(lista, dimensione):
     return gruppi
 import random
 
-def simulate_data_H(social, parameters, num_threads=False, activate_tqdm=True, min_users=50,AH=12,BH=0.04):
+def simulate_data_H(social, parameters,parameters_H=[12,0.1,2], num_threads=False, activate_tqdm=True, min_users=50):
     gamma=parameters['gamma']
     a=parameters['a']
     b=parameters['b']
@@ -107,14 +107,16 @@ def simulate_data_H(social, parameters, num_threads=False, activate_tqdm=True, m
         T0s = simulate_initial_comment(a, b, loc, scale, size=number_of_users)
         Ns=simulate_number_of_comments(alpha, lambda_,number_of_users)
         thread = [[T0s[i]] + [0] * (Ns[i] - 1) for i in range(number_of_users)]
-        size_clique = 2  # Dimensione desiderata di ogni gruppo
+        size_clique = parameters_H[2]  # Dimensione desiderata di ogni gruppo
         cliques = divide_in_gruppi(thread, size_clique)
         final=[]
         for clique  in cliques:
             # Replace nan with 0
             sizes = {i: len(sotto_lista) for i, sotto_lista in enumerate(clique)}
             N = len(clique)
-            lambda0, alpha_H, beta_H = create_hawkes_parameters(N,AH,BH)
+            mu_a=parameters_H[0]
+            mu_b=parameters_H[1]
+            lambda0, alpha_H, beta_H = create_hawkes_parameters(N,mu_a,mu_b)
             
             events = [[sublist[0]] for sublist in clique]
             
@@ -130,3 +132,17 @@ def simulate_data_H(social, parameters, num_threads=False, activate_tqdm=True, m
     observed = social[social['post_id'].isin(simulated['post_id'].unique())][['user_id', 'post_id', 'temporal_distance_birth_base_100h', 'sequential_number_of_comment_by_user_in_thread']]
 
     return simulated, observed
+
+
+def create_hawkes_parameters(N,mu_a,mu_b):
+    # Tassi base per i N processi
+    lambda0 = np.random.normal(mu_a, 1, size=N)
+
+    # Intensità dell'effetto dei processi
+    alpha = np.ones((N, N)) - np.eye(N)
+
+    # Parametri di decadimento per i N processi
+    beta = np.random.normal(mu_b, 0.01, size=N)
+
+    return lambda0, alpha, beta
+
