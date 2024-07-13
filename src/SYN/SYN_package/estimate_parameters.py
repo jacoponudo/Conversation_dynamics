@@ -25,16 +25,6 @@ def fit_beta_distribution(data):
     a, b, loc, scale = beta.fit(data)
     return {'a': a, 'b': b, 'loc': loc, 'scale': scale}
 
-def simulate_number_of_comments(alpha, lambda_,):
-    # Simula la componente inflazionata (produce 0 con probabilità alpha)
-    inflate = np.random.binomial(1, alpha, 1)
-    # Simula la componente contatore (distribuzione esponenziale negativa)
-    counts = np.random.exponential(1/lambda_, 1)
-    # Discretizza i valori esponenziali per ottenere valori di conteggio interi
-    counts = np.round(counts).astype(int)
-    counts[counts<0]=0
-    simulated_data = inflate * (counts)
-    return simulated_data
 
 def simulate_zip(alpha, lambda_, size=10000):
     # Simula la componente inflazionata (produce 0 con probabilità alpha)
