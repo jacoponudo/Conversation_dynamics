@@ -147,3 +147,4 @@ def create_hawkes_parameters(N,mu_a,mu_b):
 
     return lambda0, alpha, beta
 
+SELEZIONA  SOLO I PORCO DIO DI UTENTI CHE CHIACCHIARANO PER HAWKES
