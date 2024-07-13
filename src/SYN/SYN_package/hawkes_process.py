@@ -10,9 +10,23 @@ def create_hawkes_parameters(N,l,b):
 
     return lambda0, alpha, beta
 
-def simulate_hawkes_dependent(T, lambda0, alpha, beta,events):
+def simulate_number_of_comments(alpha, lambda_, size=1):
+    # Simulate the inflated component (produces 0 with probability alpha)
+    inflate = np.random.binomial(1, alpha, size)
+    
+    # Simulate the count component (negative exponential distribution)
+    counts = np.random.exponential(1 / lambda_, size) + 1
+    counts = np.round(counts).astype(int)
+    counts[counts < 0] = 0
+    
+    # Apply alpha probability to zero out counts where inflate is 1
+    counts = counts * (1 - inflate)
+    
+    return counts
+
+def simulate_hawkes_dependent(T, lambda0, alpha, beta,events,sizes):
     # Vettori per memorizzare i tempi degli eventi
-    events =  events# Eventi iniziali
+    N =  len(events)# Eventi iniziali
     time = max([max(event_list) for event_list in events])
     
     # Simulazione degli eventi fino al tempo T
@@ -26,7 +40,7 @@ def simulate_hawkes_dependent(T, lambda0, alpha, beta,events):
         
         
         for i in range(N):
-            if dizionario[i]==len(events[i]):
+            if sizes[i]==len(events[i]):
                 lambda_t[i]=0
         # Calcolo del tasso totale
         lambda_total = np.sum(lambda_t)
@@ -67,9 +81,9 @@ def divide_in_gruppi(lista, dimensione):
         gruppi.append(lista[num_gruppi * dimensione:])
     
     return gruppi
+import random
 
-
-def simulate_data_H(social, parameters, num_threads=False, activate_tqdm=True, min_users=50):
+def simulate_data_H(social, parameters, num_threads=False, activate_tqdm=True, min_users=50,AH=12,BH=0.04):
     gamma=parameters['gamma']
     a=parameters['a']
     b=parameters['b']
@@ -93,22 +107,21 @@ def simulate_data_H(social, parameters, num_threads=False, activate_tqdm=True, m
         T0s = simulate_initial_comment(a, b, loc, scale, size=number_of_users)
         Ns=simulate_number_of_comments(alpha, lambda_,number_of_users)
         thread = [[T0s[i]] + [0] * (Ns[i] - 1) for i in range(number_of_users)]
-        size_clique = 5  # Dimensione desiderata di ogni gruppo
+        size_clique = 2  # Dimensione desiderata di ogni gruppo
         cliques = divide_in_gruppi(thread, size_clique)
         final=[]
         for clique  in cliques:
             # Replace nan with 0
-            lista = [[0 if math.isnan(x) else x for x in sublist] for sublist in clique]
-            dizionario = {i: len(sotto_lista) for i, sotto_lista in enumerate(lista)}
-            N = len(lista)
-            lambda0, alpha, beta = create_hawkes_parameters(N,12,0.04)
+            sizes = {i: len(sotto_lista) for i, sotto_lista in enumerate(clique)}
+            N = len(clique)
+            lambda0, alpha_H, beta_H = create_hawkes_parameters(N,AH,BH)
             
-            events = [[sublist[0]] for sublist in lista]
+            events = [[sublist[0]] for sublist in clique]
             
             
             # Simulazione per un intervallo di tempo T
             T = 1
-            events = simulate_hawkes_dependent(T, lambda0, alpha, beta,events)
+            events = simulate_hawkes_dependent(T, lambda0, alpha_H, beta_H,events,sizes)
             for interaction in events:
                 for j, t in enumerate(interaction):
                     data.append({'user_id': f'User_{i}', 'post_id': th, 'temporal_distance_birth_base_100h': t, 'sequential_number_of_comment_by_user_in_thread': j + 1})
