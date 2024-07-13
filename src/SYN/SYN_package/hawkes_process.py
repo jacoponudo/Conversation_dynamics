@@ -1,3 +1,4 @@
+from tqdm import tqdm
 def create_hawkes_parameters(N,l,b):
     # Tassi base per i N processi
     lambda0 = np.ones(N)*l
