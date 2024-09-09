@@ -1,19 +1,16 @@
-# thesis
-In this repository you will find all the material concerning theresearch for my  master thesis.
-In the field of computational social sciences, this analysis is about conversation's dynamics and human behavior in digital environments.
- 
-Starting from some signals that caracterize the plattform related macro dynamics of conversation, I've tried to replicate synthetically data  from each platform to fit these signals, and then be able to interpret the different combinations of parameters used.
 
-As  signals I've identified the tendency of the conversation of been composed by less first comments with time; and also the tendency of the conversation of be consumed more repidly on some platforms than on some others. 
+This project focuses on analyzing the dynamics of digital conversations across various social platforms, including Reddit, Voat, Gab, and Facebook, with the aim of understanding how these platforms influence user interactions and participation in discussions. The research involves collecting data on conversations about topics such as politics, science, vaccines, and news to identify whether there are common characteristics or significant differences between the platforms.
 
-The first model to replicate  synthetically the data is composed by: 
-- sample of number of users from a scale free (plaftorm specific)
-- sample the moment of entrance in a conversation of a use, using a beta (plaform specific)
-- sample from the mixture of an exponenital zero inflated the number of comment that a user will do (plaform specific)
-- dispose these comments in the time using the IAT suggested by specific borr distribution (plaform specific)
+A key aspect of the analysis is to understand how individual user behaviors (such as the time they join a conversation, the number of comments they post, and the time between comments) affect the collective dynamics of discussions. By using a statistical mechanics model, the study generates synthetic data that simulates these behaviors and explains how differences in collective conversation dynamics can be traced back to simple variations in individual user habits that depend on the platform.
 
-Then compute the differences and quantify the loss to evalutate the fitting, and finally give a logical interpretetion to the  best set of parameters.
+The study concludes that the structure and algorithms of each platform play a significant role in shaping the form and lifespan of conversations. Platforms like Reddit foster more extended and distributed discussions, while others, like Facebook, see shorter, less interactive exchanges. These findings highlight that platform-dependent behaviors have a substantial impact on online discourse.
 
-In order to go from eaw data to processed, there is the directory PRO, and using PRO_mainclass.ipynb is possible to perform the preproceesing.
-In order to plot most of the graphs related to the explotatory data analysis there is the directory EDA.
-In order to estimate sets of paramters for each platform, replicate synthetic data and compare those with real data there is the directory SYN.
+Repository Structure
+The thesis project is accompanied by a GitHub repository that provides the code and resources used for data processing and analysis. The repository is organized into two main directories:
+
+src: This folder contains all the core scripts and modules for data processing and analysis.
+PRO: Manages the data preprocessing stages, filtering raw data to focus on the first 100 hours of conversations and threads with more than 50 comments.
+EDA: Holds Jupyter notebooks for exploratory data analysis, including visualizations and plots.
+SYN: Contains scripts for modeling user behavior and generating synthetic data, as well as the evaluation of the results.
+docs: This folder includes documents and papers that inspired or were referenced during the project.
+The repository is designed for transparency and reproducibility, allowing other researchers to follow the workflow from data preprocessing to synthetic data generation and analysis​(Conversation_dynamics_i…).
